@@ -625,11 +625,36 @@
             nimes: 85,
             agde: 75
         };
+        const BASE_COORDS = { lat: 43.65, lon: 3.72 }; // Vailhauquès approximatif
         const FUEL_COST_PER_KM = 0.5;
-        const getDistanceFromCity = city => {
+        async function getDistanceFromCity(city) {
             const key = (city || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            return CITY_DISTANCES[key] || 20;
-        };
+            if (CITY_DISTANCES[key]) return CITY_DISTANCES[key];
+            try {
+                const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(city)}&limit=5&autocomplete=0&type=municipality`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const feature = (data.features || []).find(f => {
+                        const p = f.properties || {};
+                        return (p.postcode && p.postcode.startsWith('34')) || (p.citycode && p.citycode.startsWith('34')) || (p.context && p.context.includes('Hérault'));
+                    });
+                    if (feature) {
+                        const [lon, lat] = feature.geometry.coordinates;
+                        const R = 6371; // Rayon terrestre en km
+                        const dLat = (lat - BASE_COORDS.lat) * Math.PI / 180;
+                        const dLon = (lon - BASE_COORDS.lon) * Math.PI / 180;
+                        const a = Math.sin(dLat / 2) ** 2 + Math.cos(BASE_COORDS.lat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                        const dist = Math.round(R * c);
+                        CITY_DISTANCES[key] = dist;
+                        return dist;
+                    }
+                }
+            } catch (e) {
+                console.error('Erreur distance', e);
+            }
+            return 20;
+        }
 
         // Variables globales
         let currentStep = 0;
@@ -780,7 +805,7 @@
         }
 
         // Fonction de calcul des prix
-        function updatePricing() {
+        async function updatePricing() {
             const tasks = readTasks();
             let tasksTotal = 0;
             let totalHours = 0;
@@ -828,7 +853,7 @@
             const days = totalHours > 0 ? Math.ceil(totalHours / 7) : 0;
 
             // Coût des trajets
-            const distance = getDistanceFromCity(byId('ville').value);
+            const distance = await getDistanceFromCity(byId('ville').value);
             const travelCost = distance * 2 * days * FUEL_COST_PER_KM;
             if (travelCost > 0 && tasksTotal > 0) {
                 rows.forEach(row => {
