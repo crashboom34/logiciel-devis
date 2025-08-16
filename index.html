@@ -549,6 +549,9 @@
             ]
         };
 
+        // Tâches éligibles à la TVA réduite (5,5 %)
+        const TVA55_TASKS = new Set(['chauffe_eau_200']);
+
         // Variables globales
         let currentStep = 0;
         // Helper functions
@@ -611,6 +614,7 @@
                         option.dataset.unit = task.unit;
                         option.dataset.rate = task.rate;
                         option.dataset.min = task.min;
+                        option.dataset.tva55 = TVA55_TASKS.has(task.id) ? '1' : '0';
                         taskSelect.appendChild(option);
                     });
                 } else {
@@ -684,7 +688,8 @@
                             unit: taskOption.dataset.unit,
                             rate: parseFloat(taskOption.dataset.rate),
                             min: parseFloat(taskOption.dataset.min),
-                            qty: qty
+                            qty: qty,
+                            tva55: taskOption.dataset.tva55 === '1'
                         });
                     }
                 }
@@ -731,8 +736,52 @@
                 rows.push([`Déplacement (${distance} km)`, travelCost]);
             }
 
+            // Options
+            if (byId('urgence').value === 'oui') {
+                const amt = totalHT * 0.10;
+                totalHT += amt;
+                rows.push(['Majoration urgence', amt]);
+            }
+            if (byId('weekend').value === 'oui') {
+                const amt = totalHT * 0.25;
+                totalHT += amt;
+                rows.push(['Travail week‑end', amt]);
+            }
+            if (byId('nuit').value === 'oui') {
+                const amt = totalHT * 0.20;
+                totalHT += amt;
+                rows.push(['Travail de nuit', amt]);
+            }
+
+            const pack = byId('pack').value;
+            if (pack === 'confort') {
+                const amt = totalHT * 0.12;
+                totalHT += amt;
+                rows.push(['Pack confort', amt]);
+            } else if (pack === 'premium') {
+                const amt = totalHT * 0.25;
+                totalHT += amt;
+                rows.push(['Pack premium', amt]);
+            }
+
             // TVA
-            const tvaRate = 0.20; // 20% par défaut
+            const tvaMode = byId('tva_mode').value;
+            const logement2ans = byId('logement_2ans').checked;
+            let tvaRate;
+
+            if (tvaMode === 'auto') {
+                const all55 = tasks.length > 0 && tasks.every(t => t.tva55);
+                if (all55) {
+                    tvaRate = 0.055;
+                } else if (logement2ans) {
+                    tvaRate = 0.10;
+                } else {
+                    tvaRate = 0.20;
+                }
+            } else {
+                tvaRate = parseFloat(tvaMode) / 100;
+            }
+
             const tvaAmount = totalHT * tvaRate;
             const totalTTC = totalHT + tvaAmount;
 
@@ -741,7 +790,7 @@
             byId('total-ttc').textContent = formatEUR(totalTTC);
             byId('f-total-ht').textContent = formatEUR(totalHT);
             byId('f-total-ttc').textContent = formatEUR(totalTTC);
-            byId('tva-rate').textContent = '20%';
+            byId('tva-rate').textContent = `${(tvaRate * 100).toFixed(1).replace(/\.0$/, '')}%`;
             byId('tva-amt').textContent = formatEUR(tvaAmount);
             byId('count-tasks').textContent = `${tasks.length} ${tasks.length > 1 ? 'tâches' : 'tâche'}`;
 
@@ -764,6 +813,9 @@
 
         // Initialisation
         byId('add-task').addEventListener('click', addTaskRow);
+        ['urgence','weekend','nuit','pack','tva_mode'].forEach(id => byId(id).addEventListener('change', updatePricing));
+        byId('logement_2ans').addEventListener('change', updatePricing);
+        byId('distance').addEventListener('input', updatePricing);
         addTaskRow();
 
     </script>
