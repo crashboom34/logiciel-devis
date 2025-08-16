@@ -847,11 +847,12 @@
             });
 
             // Durée estimée du chantier
-            const days = totalHours > 0 ? Math.ceil(totalHours / 7) : 0;
+            const workDays = totalHours / 7;
+            const days = totalHours > 0 ? Math.ceil(workDays) : 0;
 
-            // Coût des trajets
+            // Coût des trajets basé sur la durée réelle
             const distance = await getDistanceFromCity(byId('ville').value);
-            const travelCost = distance * 2 * days * FUEL_COST_PER_KM;
+            const travelCost = distance * 2 * workDays * FUEL_COST_PER_KM;
             if (travelCost > 0 && tasksTotal > 0) {
                 rows.forEach(row => {
                     const share = (row.price / tasksTotal) * travelCost;
