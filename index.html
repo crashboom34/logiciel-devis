@@ -551,8 +551,6 @@
 
         // Variables globales
         let currentStep = 0;
-        let tasks = [];
-
         // Helper functions
         const formatEUR = n => (n || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
         const byId = id => document.getElementById(id);
@@ -565,6 +563,7 @@
 
             // Sélection du métier
             const tradeSelect = document.createElement('select');
+            tradeSelect.className = 'trade-select';
             tradeSelect.innerHTML = '<option value="">Choisir un métier...</option>';
             Object.keys(CATALOG).forEach(trade => {
                 const option = document.createElement('option');
@@ -575,11 +574,13 @@
 
             // Sélection de la tâche
             const taskSelect = document.createElement('select');
+            taskSelect.className = 'task-select';
             taskSelect.innerHTML = '<option value="">Choisir une tâche...</option>';
             taskSelect.disabled = true;
 
             // Quantité
             const qtyInput = document.createElement('input');
+            qtyInput.className = 'qty-input';
             qtyInput.type = 'number';
             qtyInput.min = '0';
             qtyInput.value = '1';
@@ -600,7 +601,7 @@
             tradeSelect.addEventListener('change', function() {
                 const selectedTrade = this.value;
                 taskSelect.innerHTML = '<option value="">Choisir une tâche...</option>';
-                
+
                 if (selectedTrade && CATALOG[selectedTrade]) {
                     taskSelect.disabled = false;
                     CATALOG[selectedTrade].forEach(task => {
@@ -615,8 +616,10 @@
                 } else {
                     taskSelect.disabled = true;
                 }
-                
+
                 unitDiv.textContent = '—';
+                qtyInput.disabled = false;
+                qtyInput.value = '1';
                 updatePricing();
             });
 
@@ -624,13 +627,17 @@
                 const selectedOption = this.selectedOptions[0];
                 if (selectedOption && selectedOption.dataset.unit) {
                     unitDiv.textContent = selectedOption.dataset.unit;
-                    
-                    // Si c'est un forfait, mettre la quantité à 1
+
+                    // Si c'est un forfait, mettre la quantité à 1 et la désactiver
                     if (selectedOption.dataset.unit === 'forfait') {
                         qtyInput.value = '1';
+                        qtyInput.disabled = true;
+                    } else {
+                        qtyInput.disabled = false;
                     }
                 } else {
                     unitDiv.textContent = '—';
+                    qtyInput.disabled = false;
                 }
                 updatePricing();
             });
@@ -659,9 +666,9 @@
             const result = [];
 
             taskRows.forEach(row => {
-                const tradeSelect = row.children[0];
-                const taskSelect = row.children[1];
-                const qtyInput = row.children[2];
+                const tradeSelect = row.querySelector('.trade-select');
+                const taskSelect = row.querySelector('.task-select');
+                const qtyInput = row.querySelector('.qty-input');
 
                 const trade = tradeSelect.value;
                 const taskId = taskSelect.value;
@@ -746,3 +753,19 @@
                 const tr = document.createElement('tr');
                 const td1 = document.createElement('td');
                 td1.textContent = description;
+                const td2 = document.createElement('td');
+                td2.className = 'right';
+                td2.textContent = formatEUR(amount);
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                rowsContainer.appendChild(tr);
+            });
+        }
+
+        // Initialisation
+        byId('add-task').addEventListener('click', addTaskRow);
+        addTaskRow();
+
+    </script>
+</body>
+</html>
