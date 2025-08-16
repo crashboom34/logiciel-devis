@@ -628,15 +628,19 @@
         const BASE_COORDS = { lat: 43.65, lon: 3.72 }; // Vailhauquès approximatif
         const FUEL_COST_PER_KM = 0.5;
         async function getDistanceFromCity(city) {
-            const key = (city || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const cleaned = (city || '').trim();
+            const key = cleaned.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             if (CITY_DISTANCES[key]) return CITY_DISTANCES[key];
             try {
-                const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(city)}&limit=5&autocomplete=0&type=municipality`);
+                const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(cleaned)}&limit=5&autocomplete=0&type=municipality`);
                 if (res.ok) {
                     const data = await res.json();
                     const feature = (data.features || []).find(f => {
                         const p = f.properties || {};
-                        return (p.postcode && p.postcode.startsWith('34')) || (p.citycode && p.citycode.startsWith('34')) || (p.context && p.context.includes('Hérault'));
+                        const ctx = (p.context || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                        return (p.postcode && p.postcode.startsWith('34')) ||
+                               (p.citycode && p.citycode.startsWith('34')) ||
+                               ctx.includes('herault');
                     });
                     if (feature) {
                         const [lon, lat] = feature.geometry.coordinates;
