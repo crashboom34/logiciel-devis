@@ -704,7 +704,16 @@
             let totalHT = 0;
             const rows = [];
 
-            // Calcul du prix de base des tâches
+            // Taux de majoration appliqué aux tâches en fonction des options
+            let optionRate = 0;
+            if (byId('urgence').value === 'oui') optionRate += 0.10;
+            if (byId('weekend').value === 'oui') optionRate += 0.25;
+            if (byId('nuit').value === 'oui') optionRate += 0.20;
+            const pack = byId('pack').value;
+            if (pack === 'confort') optionRate += 0.12;
+            else if (pack === 'premium') optionRate += 0.25;
+
+            // Calcul du prix des tâches avec majoration éventuelle
             tasks.forEach(task => {
                 let price = 0;
                 
@@ -724,6 +733,9 @@
                     price = Math.max(price, task.min);
                 }
 
+                // Répartir les options sur les tâches
+                price *= (1 + optionRate);
+
                 totalHT += price;
                 rows.push([`${task.trade} — ${task.label} (${task.qty} ${task.unit})`, price]);
             });
@@ -736,37 +748,7 @@
                 rows.push([`Déplacement (${distance} km)`, travelCost]);
             }
 
-            // Options
-            const baseHT = totalHT;
-            let optionsExtra = 0;
-            if (byId('urgence').value === 'oui') {
-                const amt = baseHT * 0.10;
-                optionsExtra += amt;
-                rows.push(['Majoration urgence', amt]);
-            }
-            if (byId('weekend').value === 'oui') {
-                const amt = baseHT * 0.25;
-                optionsExtra += amt;
-                rows.push(['Travail week‑end', amt]);
-            }
-            if (byId('nuit').value === 'oui') {
-                const amt = baseHT * 0.20;
-                optionsExtra += amt;
-                rows.push(['Travail de nuit', amt]);
-            }
-
-            const pack = byId('pack').value;
-            if (pack === 'confort') {
-                const amt = baseHT * 0.12;
-                optionsExtra += amt;
-                rows.push(['Pack confort', amt]);
-            } else if (pack === 'premium') {
-                const amt = baseHT * 0.25;
-                optionsExtra += amt;
-                rows.push(['Pack premium', amt]);
-            }
-
-            totalHT += optionsExtra;
+            // Les options sont réparties équitablement sur les tâches, aucun ajout de ligne séparée
 
             // TVA
             const tvaMode = byId('tva_mode').value;
