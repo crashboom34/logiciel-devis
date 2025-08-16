@@ -737,32 +737,36 @@
             }
 
             // Options
+            const baseHT = totalHT;
+            let optionsExtra = 0;
             if (byId('urgence').value === 'oui') {
-                const amt = totalHT * 0.10;
-                totalHT += amt;
+                const amt = baseHT * 0.10;
+                optionsExtra += amt;
                 rows.push(['Majoration urgence', amt]);
             }
             if (byId('weekend').value === 'oui') {
-                const amt = totalHT * 0.25;
-                totalHT += amt;
+                const amt = baseHT * 0.25;
+                optionsExtra += amt;
                 rows.push(['Travail week‑end', amt]);
             }
             if (byId('nuit').value === 'oui') {
-                const amt = totalHT * 0.20;
-                totalHT += amt;
+                const amt = baseHT * 0.20;
+                optionsExtra += amt;
                 rows.push(['Travail de nuit', amt]);
             }
 
             const pack = byId('pack').value;
             if (pack === 'confort') {
-                const amt = totalHT * 0.12;
-                totalHT += amt;
+                const amt = baseHT * 0.12;
+                optionsExtra += amt;
                 rows.push(['Pack confort', amt]);
             } else if (pack === 'premium') {
-                const amt = totalHT * 0.25;
-                totalHT += amt;
+                const amt = baseHT * 0.25;
+                optionsExtra += amt;
                 rows.push(['Pack premium', amt]);
             }
+
+            totalHT += optionsExtra;
 
             // TVA
             const tvaMode = byId('tva_mode').value;
@@ -813,9 +817,15 @@
 
         // Initialisation
         byId('add-task').addEventListener('click', addTaskRow);
-        ['urgence','weekend','nuit','pack','tva_mode'].forEach(id => byId(id).addEventListener('change', updatePricing));
-        byId('logement_2ans').addEventListener('change', updatePricing);
-        byId('distance').addEventListener('input', updatePricing);
+        const optionIds = ['urgence', 'weekend', 'nuit', 'pack', 'tva_mode'];
+        optionIds.forEach(id => {
+            const el = byId(id);
+            if (el) el.addEventListener('change', updatePricing);
+        });
+        const logement2ansEl = byId('logement_2ans');
+        if (logement2ansEl) logement2ansEl.addEventListener('change', updatePricing);
+        const distanceEl = byId('distance');
+        if (distanceEl) distanceEl.addEventListener('input', updatePricing);
         addTaskRow();
 
     </script>
