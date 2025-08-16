@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
             --bg: #0b1220;
@@ -1028,9 +1029,70 @@
                 buildRecap();
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                const text = byId('recap').innerText;
-                const lines = doc.splitTextToSize(text, 180);
-                doc.text(lines, 10, 10);
+
+                // Header
+                doc.setFillColor(22, 163, 74);
+                doc.rect(0, 0, 210, 40, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(20);
+                doc.setTextColor(255, 255, 255);
+                doc.text('Devis', 14, 25);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                const clientY = 50;
+                doc.text(`Client : ${byId('name').value}`, 14, clientY);
+                doc.text(`Email : ${byId('email').value}`, 14, clientY + 8);
+                doc.text(`Téléphone : ${byId('phone').value}`, 14, clientY + 16);
+
+                // Table des prestations
+                const rowsData = Array.from(byId('rows').querySelectorAll('tr')).map(tr => {
+                    const tds = tr.querySelectorAll('td');
+                    return [tds[0].textContent, tds[1].textContent];
+                });
+                let finalY = clientY + 24;
+                if (rowsData.length > 0 && doc.autoTable) {
+                    doc.autoTable({
+                        startY: finalY,
+                        head: [['Description', 'Prix HT']],
+                        body: rowsData,
+                        styles: { fontSize: 10, cellPadding: 3 },
+                        headStyles: { fillColor: [22, 163, 74], textColor: 255 },
+                        alternateRowStyles: { fillColor: [245, 245, 245] },
+                        theme: 'striped'
+                    });
+                    finalY = doc.lastAutoTable.finalY + 10;
+                }
+
+                // Totaux
+                doc.setFontSize(12);
+                doc.text(
+                    `Total HT : ${byId('f-total-ht').textContent}`,
+                    150,
+                    finalY,
+                    { align: 'right' }
+                );
+                doc.text(
+                    `TVA ${byId('tva-rate').textContent} : ${byId('tva-amt').textContent}`,
+                    150,
+                    finalY + 8,
+                    { align: 'right' }
+                );
+                doc.setFont('helvetica', 'bold');
+                doc.text(
+                    `Total TTC : ${byId('f-total-ttc').textContent}`,
+                    150,
+                    finalY + 16,
+                    { align: 'right' }
+                );
+
+                // Footer
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                doc.setTextColor(120, 120, 120);
+                doc.text('Document généré avec logiciel-devis', 105, 290, { align: 'center' });
+
                 doc.save('devis.pdf');
             });
         }
