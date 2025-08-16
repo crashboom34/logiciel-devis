@@ -924,6 +924,46 @@
         if (villeEl) villeEl.addEventListener('input', updatePricing);
         addTaskRow();
 
+        // Génération du récapitulatif
+        function buildRecap() {
+            const recap = byId('recap');
+            const tasks = readTasks();
+            let html = '<h3>Coordonnées</h3>';
+            html += `<p>${byId('name').value} — ${byId('email').value} — ${byId('phone').value}</p>`;
+            const comment = byId('comment').value.trim();
+            if (comment) {
+                html += `<p>${comment}</p>`;
+            }
+            if (tasks.length > 0) {
+                html += '<h3>Tâches</h3><ul>';
+                tasks.forEach(t => {
+                    html += `<li>${t.trade} — ${t.label} (${t.qty} ${t.unit})</li>`;
+                });
+                html += '</ul>';
+            }
+            html += `<p><strong>Total HT :</strong> ${byId('f-total-ht').textContent}<br><strong>Total TTC :</strong> ${byId('f-total-ttc').textContent} (TVA ${byId('tva-rate').textContent})</p>`;
+            recap.innerHTML = html;
+        }
+
+        // Navigation vers le récapitulatif
+        const btnNext = byId('btn-next');
+        if (btnNext) {
+            btnNext.addEventListener('click', async function () {
+                await updatePricing();
+                buildRecap();
+                const step5 = byId('step-5');
+                step5.style.display = 'block';
+                step5.scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+        const btnEdit = byId('btn-edit');
+        if (btnEdit) {
+            btnEdit.addEventListener('click', function () {
+                byId('step-5').style.display = 'none';
+                byId('step-4').scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+
     </script>
 </body>
 </html>
