@@ -715,7 +715,12 @@
         let currentStep = 0;
         let pdfRows = [];
         // Helper functions
-        const formatEUR = n => (n || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+        // Formatting utility that avoids locale-specific non breaking spaces
+        // to keep PDF output compatible with basic fonts.
+        const formatEUR = n => {
+            const value = (n || 0).toFixed(2).replace('.', ',');
+            return `${value} EUR`;
+        };
         const byId = id => document.getElementById(id);
 
         // Fonction pour créer une ligne de tâche
@@ -1068,7 +1073,7 @@
                 if (pdfRows.length > 0 && doc.autoTable) {
                     doc.autoTable({
                         startY: y,
-                        head: [['Description', 'Quantité', 'PU HT (€)', 'Total HT (€)']],
+                        head: [['Description', 'Quantité', 'PU HT (EUR)', 'Total HT (EUR)']],
                         body: pdfRows.map(r => [r.description, r.qty.toString(), formatEUR(r.unitPrice), formatEUR(r.total)]),
                         styles: { fontSize: 10, cellPadding: 3 },
                         headStyles: { fillColor: [0, 0, 0], textColor: 255 },
@@ -1090,11 +1095,18 @@
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
-                doc.text('Durée de validité du devis : 30 jours', 14, y); y += 5;
-                doc.text('Prix indiqué : sous réserve d\'évolution du coût des matériaux, ajusté à la commande, selon stock et la livraison.', 14, y, { maxWidth: 182 }); y += 5;
-                doc.text(`TVA applicable : ${byId('tva-rate').textContent}`, 14, y); y += 5;
-                doc.text('Mention légale : 50% d\'acompte à la commande, solde à la livraison.', 14, y, { maxWidth: 182 }); y += 5;
-                doc.text('SRT légales : TVA applicable, RC Pro, coordonnées disponibles sur demande.', 14, y, { maxWidth: 182 });
+
+                const addTextBlock = text => {
+                    const lines = doc.splitTextToSize(text, 182);
+                    doc.text(lines, 14, y);
+                    y += lines.length * 5;
+                };
+
+                addTextBlock('Durée de validité du devis : 30 jours');
+                addTextBlock("Prix indiqué : sous réserve d'évolution du coût des matériaux, ajusté à la commande, selon stock et la livraison.");
+                addTextBlock(`TVA applicable : ${byId('tva-rate').textContent}`);
+                addTextBlock("Mention légale : 50% d'acompte à la commande, solde à la livraison.");
+                addTextBlock('SRT légales : TVA applicable, RC Pro, coordonnées disponibles sur demande.');
 
                 doc.save('devis.pdf');
             });
