@@ -964,6 +964,20 @@
             });
         }
 
+        const btnPdf = byId('btn-pdf');
+        if (btnPdf) {
+            btnPdf.addEventListener('click', async function () {
+                await updatePricing();
+                buildRecap();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const text = byId('recap').innerText;
+                const lines = doc.splitTextToSize(text, 180);
+                doc.text(lines, 10, 10);
+                doc.save('devis.pdf');
+            });
+        }
+
     </script>
 </body>
 </html>
