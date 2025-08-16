@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Devis intelligent — SARL BRUNO MIRA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --fg: #e5e7eb;
+            --muted: #94a3b8;
+            --card: #0f172a;
+            --line: #1f2937;
+            --accent: #22c55e;
+            --danger: #ef4444;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            margin: 0;
+            font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+            background: var(--bg);
+            color: var(--fg);
+        }
+        
+        a {
+            color: var(--accent);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+        
+        header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        
+        .logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            font-weight: 800;
+            color: #001b0a;
+        }
+        
+        h1 {
+            font-size: 22px;
+            margin: 0;
+        }
+        
+        .sub {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 2px;
+        }
+        
+        .layout {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 16px;
+        }
+        
+        @media (max-width: 980px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 16px;
+        }
+        
+        .stepper {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        
+        .step {
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            font-size: 13px;
+            color: var(--muted);
+            cursor: pointer;
+        }
+        
+        .step.active {
+            border-color: var(--accent);
+            color: #042d17;
+            background: rgba(34, 197, 94, 0.15);
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .row3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+        
+        @media (max-width: 720px) {
+            .row, .row3 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        label {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: block;
+        }
+        
+        input, select, button, textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: #0b1220;
+            color: var(--fg);
+            font-size: 14px;
+        }
+        
+        input[type="checkbox"], input[type="radio"] {
+            width: auto;
+        }
+        
+        .btn {
+            cursor: pointer;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: #001b0a;
+            border: 0;
+        }
+        
+        .btn-ghost {
+            background: transparent;
+        }
+        
+        .muted {
+            color: var(--muted);
+            font-size: 12px;
+        }
+        
+        .badge {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            padding: 4px 8px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        
+        .price {
+            font-size: 28px;
+            font-weight: 800;
+        }
+        
+        .right {
+            text-align: right;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 10px;
+            border-bottom: 1px dashed var(--line);
+            font-size: 14px;
+        }
+        
+        th {
+            text-align: left;
+            color: var(--muted);
+        }
+        
+        .total {
+            font-weight: 800;
+        }
+        
+        .grid-gap {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .task-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1.2fr 0.6fr 0.6fr auto;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .task-row button {
+            width: auto;
+            padding: 8px 12px;
+        }
+        
+        .pill {
+            padding: 4px 8px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+        
+        .hr {
+            height: 1px;
+            background: var(--line);
+            margin: 12px 0;
+        }
+        
+        .alert {
+            background: #0c1322;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">BM</div>
+            <div>
+                <h1>Devis intelligent — SARL BRUNO MIRA</h1>
+                <div class="sub">Formulaire multi‑étapes · Tarification automatique par accès chantier, métiers et tâches · PDF & capture de lead</div>
+            </div>
+        </header>
+        
+        <div class="layout">
+            <div>
+                <div class="stepper" id="stepper"></div>
+                
+                <div id="step-1" class="card">
+                    <h2 style="margin-top:0">1) Infos chantier</h2>
+                    <div class="row3">
+                        <div>
+                            <label>Adresse (ville)</label>
+                            <input id="ville" placeholder="Montpellier, Béziers, Sète…"/>
+                        </div>
+                        <div>
+                            <label>Distance estimée (km AR)</label>
+                            <input id="distance" type="number" min="0" value="20"/>
+                        </div>
+                        <div>
+                            <label>Date souhaitée</label>
+                            <input id="date" type="date"/>
+                        </div>
+                    </div>
+                    
+                    <div class="row3" style="margin-top:10px">
+                        <div>
+                            <label>Étage</label>
+                            <input id="etage" type="number" min="0" value="0"/>
+                            <div class="muted">0 = RDC</div>
+                        </div>
+                        <div>
+                            <label>Ascenseur</label>
+                            <select id="ascenseur">
+                                <option>Oui</option>
+                                <option>Non</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Portage depuis stationnement (m)</label>
+                            <input id="portage" type="number" min="0" value="10"/>
+                        </div>
+                    </div>
+                    
+                    <div class="row3" style="margin-top:10px">
+                        <div>
+                            <label>Accès global</label>
+                            <select id="acces">
+                                <option value="simple">Simple</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="difficile">Difficile</option>
+                            </select>
+                            <div class="muted">Largeur/hauteur, couloirs, contraintes…</div>
+                        </div>
+                        <div>
+                            <label>Stationnement</label>
+                            <select id="stationnement">
+                                <option value="facile">Facile</option>
+                                <option value="moyen">Moyen</option>
+                                <option value="difficile">Difficile</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Frais de stationnement (€)</label>
+                            <input id="parking_fees" type="number" min="0" value="0"/>
+                        </div>
+                    </div>
+                    
+                    <div class="row3" style="margin-top:10px">
+                        <div>
+                            <label>Accès engins (camion, mini‑pelle, benne)</label>
+                            <select id="engins">
+                                <option value="ok">Possible</option>
+                                <option value="limité">Limité</option>
+                                <option value="impossible">Impossible</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Déchets à évacuer (m³)</label>
+                            <input id="dechets" type="number" min="0" value="0"/>
+                        </div>
+                        <div>
+                            <label>Complexité coordination</label>
+                            <select id="complexite">
+                                <option value="basse">Basse</option>
+                                <option value="moyenne" selected>Moyenne</option>
+                                <option value="haute">Haute</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="step-2" class="card" style="margin-top:12px">
+                    <h2 style="margin-top:0">2) Métiers & tâches</h2>
+                    <div class="grid-gap">
+                        <div id="tasks"></div>
+                        <button id="add-task" class="btn btn-ghost" type="button">+ Ajouter une tâche</button>
+                        <div class="muted">Sélectionnez un métier, puis une tâche, indiquez la quantité.</div>
+                    </div>
+                </div>
+                
+                <div id="step-3" class="card" style="margin-top:12px">
+                    <h2 style="margin-top:0">3) Options & TVA</h2>
+                    <div class="row3">
+                        <div>
+                            <label>Urgence</label>
+                            <select id="urgence">
+                                <option value="non">Non</option>
+                                <option value="oui">Oui (+10%)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Week‑end</label>
+                            <select id="weekend">
+                                <option value="non">Non</option>
+                                <option value="oui">Oui (+25%)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Travail de nuit</label>
+                            <select id="nuit">
+                                <option value="non">Non</option>
+                                <option value="oui">Oui (+20%)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row" style="margin-top:10px">
+                        <div>
+                            <label>Pack / Marge</label>
+                            <select id="pack">
+                                <option value="standard">Standard (x1.00)</option>
+                                <option value="confort">Confort (x1.12)</option>
+                                <option value="premium">Premium (x1.25)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>TVA automatique</label>
+                            <select id="tva_mode">
+                                <option value="auto">Auto (5,5 / 10 / 20)</option>
+                                <option value="5.5">Forcer 5,5%</option>
+                                <option value="10">Forcer 10%</option>
+                                <option value="20">Forcer 20%</option>
+                            </select>
+                            <div class="muted">Auto : 5,5% si uniquement tâches éligibles, sinon 10% si logement > 2 ans, sinon 20%.</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:10px">
+                        <label><input id="logement_2ans" type="checkbox" checked/> Logement achevé depuis plus de 2 ans</label>
+                    </div>
+                </div>
+                
+                <div id="step-4" class="card" style="margin-top:12px">
+                    <h2 style="margin-top:0">4) Coordonnées</h2>
+                    <div class="row3">
+                        <div>
+                            <label>Nom</label>
+                            <input id="name" placeholder="Nom Prénom"/>
+                        </div>
+                        <div>
+                            <label>Email</label>
+                            <input id="email" type="email" placeholder="vous@email.fr"/>
+                        </div>
+                        <div>
+                            <label>Téléphone</label>
+                            <input id="phone" type="tel" placeholder="06 12 34 56 78"/>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:10px">
+                        <label>Commentaire</label>
+                        <textarea id="comment" rows="3" placeholder="Infos complémentaires, photos (lien), contraintes spécifiques…"></textarea>
+                    </div>
+                    
+                    <div class="hr"></div>
+                    
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <button id="btn-prev" class="btn btn-ghost" type="button">← Précédent</button>
+                        <button id="btn-next" class="btn btn-primary" type="button">Voir le récapitulatif →</button>
+                    </div>
+                </div>
+                
+                <div id="step-5" class="card" style="margin-top:12px;display:none">
+                    <h2 style="margin-top:0">5) Récapitulatif & envoi</h2>
+                    <div id="recap"></div>
+                    <div class="hr"></div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <button id="btn-pdf" class="btn btn-ghost" type="button">Télécharger le PDF</button>
+                        <button id="btn-send" class="btn btn-primary" type="button">Envoyer & être rappelé</button>
+                        <button id="btn-edit" class="btn btn-ghost" type="button">← Modifier</button>
+                    </div>
+                    <p class="muted" style="margin-top:8px">En envoyant, vous acceptez d'être recontacté. Données stockées de façon sécurisée. Droit de rectification et suppression sur demande.</p>
+                </div>
+            </div>
+            
+            <div class="card" aria-live="polite" aria-atomic="true">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                    <h2 style="margin:0">Estimation en temps réel</h2>
+                    <span class="badge" id="count-tasks">0 tâche</span>
+                </div>
+                
+                <div class="row" style="margin-top:8px">
+                    <div>
+                        <div class="muted">Total estimatif HT</div>
+                        <div class="price" id="total-ht">—</div>
+                    </div>
+                    <div>
+                        <div class="muted">Total estimatif TTC</div>
+                        <div class="price" id="total-ttc">—</div>
+                    </div>
+                </div>
+                
+                <table style="margin-top:10px">
+                    <thead>
+                        <tr>
+                            <th>Détail</th>
+                            <th class="right">HT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rows"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="total">Total HT</td>
+                            <td class="right total" id="f-total-ht">—</td>
+                        </tr>
+                        <tr>
+                            <td>TVA <span id="tva-rate">—</span></td>
+                            <td class="right" id="tva-amt">—</td>
+                        </tr>
+                        <tr>
+                            <td class="total">Total TTC</td>
+                            <td class="right total" id="f-total-ttc">—</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <div class="alert" style="margin-top:12px">
+                    Estimation indicative. Visite technique et devis signé nécessaires pour valider prix, quantités et délais. TVA réduite sous conditions.
+                </div>
+                
+                <div class="muted" style="margin-top:10px">
+                    SARL BRUNO MIRA — SIREN 000 000 000 — RCS XXX — TVA FRXX — RC & décennale n° XXXXX — 34980 Combaillaux — contact@exemple.fr — 04 xx xx xx xx. Validité 30 jours.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CATALOG = {
+            "Maçonnerie": [
+                { id: 'dalle_beton', label: 'Dalle béton', unit: 'm²', rate: 95, min: 800 },
+                { id: 'ouverture_porteur', label: 'Ouverture mur porteur (IPN inclus)', unit: 'forfait', rate: 2800, min: 2800 },
+                { id: 'demolition_cloison', label: 'Démolition cloison', unit: 'm²', rate: 35, min: 300 },
+                { id: 'mur_agglo', label: 'Mur agglos 20', unit: 'm²', rate: 85, min: 600 },
+                { id: 'chape_liquide', label: 'Chape liquide', unit: 'm²', rate: 22, min: 400 },
+                { id: 'seuil_beton', label: 'Seuil béton', unit: 'ml', rate: 60, min: 240 }
+            ],
+            "Plomberie": [
+                { id: 'reseau_ecs', label: 'Réseau eau chaude/froide', unit: 'ml', rate: 42, min: 350 },
+                { id: 'sdb_pack', label: 'Salle de bains — pack (hors meubles)', unit: 'm²', rate: 280, min: 2500 },
+                { id: 'wc_suspendu', label: 'WC suspendu — pose', unit: 'forfait', rate: 420, min: 420 },
+                { id: 'chauffe_eau_200', label: 'Chauffe‑eau 200 L — pose', unit: 'forfait', rate: 380, min: 380 },
+                { id: 'evac_eu', label: 'Évacuation EU', unit: 'ml', rate: 30, min: 180 }
+            ],
+            "Électricité": [
+                { id: 'renov_t2', label: 'Rénovation électrique T2', unit: 'forfait', rate: 3200, min: 3200 },
+                { id: 'prise', label: 'Ajout prise', unit: 'u', rate: 55, min: 165 },
+                { id: 'spots', label: 'Spots encastrés', unit: 'u', rate: 65, min: 195 },
+                { id: 'tableau', label: 'Remplacement tableau', unit: 'forfait', rate: 450, min: 450 },
+                { id: 'point_lumineux', label: 'Point lumineux', unit: 'u', rate: 70, min: 140 }
+            ],
+            "Carrelage": [
+                { id: 'sol_interieur', label: 'Carrelage sol intérieur', unit: 'm²', rate: 55, min: 500 },
+                { id: 'terrasse', label: 'Terrasse carrelée', unit: 'm²', rate: 75, min: 800 },
+                { id: 'credence', label: 'Crédence cuisine', unit: 'm²', rate: 85, min: 200 },
+                { id: 'faience', label: 'Faïence murale', unit: 'm²', rate: 45, min: 300 }
+            ],
+            "Peinture": [
+                { id: 'murs_plafonds', label: 'Peinture murs & plafonds', unit: 'm²', rate: 14, min: 300 },
+                { id: 'boiseries_laque', label: 'Boiseries — laque', unit: 'm²', rate: 22, min: 220 },
+                { id: 'enduit_lissage', label: 'Enduit de lissage', unit: 'm²', rate: 12, min: 180 }
+            ]
+        };
+
+        // Variables globales
+        let currentStep = 0;
+        let tasks = [];
+
+        // Helper functions
+        const formatEUR = n => (n || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+        const byId = id => document.getElementById(id);
+
+        // Fonction pour créer une ligne de tâche
+        function addTaskRow() {
+            const tasksContainer = byId('tasks');
+            const row = document.createElement('div');
+            row.className = 'task-row';
+
+            // Sélection du métier
+            const tradeSelect = document.createElement('select');
+            tradeSelect.innerHTML = '<option value="">Choisir un métier...</option>';
+            Object.keys(CATALOG).forEach(trade => {
+                const option = document.createElement('option');
+                option.value = trade;
+                option.textContent = trade;
+                tradeSelect.appendChild(option);
+            });
+
+            // Sélection de la tâche
+            const taskSelect = document.createElement('select');
+            taskSelect.innerHTML = '<option value="">Choisir une tâche...</option>';
+            taskSelect.disabled = true;
+
+            // Quantité
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'number';
+            qtyInput.min = '0';
+            qtyInput.value = '1';
+            qtyInput.placeholder = 'Qté';
+
+            // Unité
+            const unitDiv = document.createElement('div');
+            unitDiv.className = 'pill';
+            unitDiv.textContent = '—';
+
+            // Bouton supprimer
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-ghost';
+            deleteBtn.type = 'button';
+            deleteBtn.textContent = '🗑️';
+
+            // Event listeners
+            tradeSelect.addEventListener('change', function() {
+                const selectedTrade = this.value;
+                taskSelect.innerHTML = '<option value="">Choisir une tâche...</option>';
+                
+                if (selectedTrade && CATALOG[selectedTrade]) {
+                    taskSelect.disabled = false;
+                    CATALOG[selectedTrade].forEach(task => {
+                        const option = document.createElement('option');
+                        option.value = task.id;
+                        option.textContent = task.label;
+                        option.dataset.unit = task.unit;
+                        option.dataset.rate = task.rate;
+                        option.dataset.min = task.min;
+                        taskSelect.appendChild(option);
+                    });
+                } else {
+                    taskSelect.disabled = true;
+                }
+                
+                unitDiv.textContent = '—';
+                updatePricing();
+            });
+
+            taskSelect.addEventListener('change', function() {
+                const selectedOption = this.selectedOptions[0];
+                if (selectedOption && selectedOption.dataset.unit) {
+                    unitDiv.textContent = selectedOption.dataset.unit;
+                    
+                    // Si c'est un forfait, mettre la quantité à 1
+                    if (selectedOption.dataset.unit === 'forfait') {
+                        qtyInput.value = '1';
+                    }
+                } else {
+                    unitDiv.textContent = '—';
+                }
+                updatePricing();
+            });
+
+            qtyInput.addEventListener('input', updatePricing);
+
+            deleteBtn.addEventListener('click', function() {
+                row.remove();
+                updatePricing();
+            });
+
+            // Assembler la ligne
+            row.appendChild(tradeSelect);
+            row.appendChild(taskSelect);
+            row.appendChild(qtyInput);
+            row.appendChild(unitDiv);
+            row.appendChild(deleteBtn);
+
+            tasksContainer.appendChild(row);
+            updatePricing();
+        }
+
+        // Fonction pour lire toutes les tâches
+        function readTasks() {
+            const taskRows = document.querySelectorAll('.task-row');
+            const result = [];
+
+            taskRows.forEach(row => {
+                const tradeSelect = row.children[0];
+                const taskSelect = row.children[1];
+                const qtyInput = row.children[2];
+
+                const trade = tradeSelect.value;
+                const taskId = taskSelect.value;
+                const qty = parseFloat(qtyInput.value) || 0;
+
+                if (trade && taskId && qty > 0) {
+                    const taskOption = taskSelect.selectedOptions[0];
+                    if (taskOption) {
+                        result.push({
+                            trade: trade,
+                            taskId: taskId,
+                            label: taskOption.textContent,
+                            unit: taskOption.dataset.unit,
+                            rate: parseFloat(taskOption.dataset.rate),
+                            min: parseFloat(taskOption.dataset.min),
+                            qty: qty
+                        });
+                    }
+                }
+            });
+
+            return result;
+        }
+
+        // Fonction de calcul des prix
+        function updatePricing() {
+            const tasks = readTasks();
+            let totalHT = 0;
+            const rows = [];
+
+            // Calcul du prix de base des tâches
+            tasks.forEach(task => {
+                let price = 0;
+                
+                switch (task.unit) {
+                    case 'm²':
+                    case 'ml':
+                    case 'u':
+                        price = task.rate * task.qty;
+                        break;
+                    case 'forfait':
+                        price = task.rate;
+                        break;
+                }
+
+                // Appliquer le minimum
+                if (task.min) {
+                    price = Math.max(price, task.min);
+                }
+
+                totalHT += price;
+                rows.push([`${task.trade} — ${task.label} (${task.qty} ${task.unit})`, price]);
+            });
+
+            // Facteurs d'accès (simplifiés)
+            const distance = parseFloat(byId('distance').value) || 0;
+            const travelCost = distance * 1.2; // 1.2€ par km
+            if (travelCost > 0) {
+                totalHT += travelCost;
+                rows.push([`Déplacement (${distance} km)`, travelCost]);
+            }
+
+            // TVA
+            const tvaRate = 0.20; // 20% par défaut
+            const tvaAmount = totalHT * tvaRate;
+            const totalTTC = totalHT + tvaAmount;
+
+            // Mise à jour de l'affichage
+            byId('total-ht').textContent = formatEUR(totalHT);
+            byId('total-ttc').textContent = formatEUR(totalTTC);
+            byId('f-total-ht').textContent = formatEUR(totalHT);
+            byId('f-total-ttc').textContent = formatEUR(totalTTC);
+            byId('tva-rate').textContent = '20%';
+            byId('tva-amt').textContent = formatEUR(tvaAmount);
+            byId('count-tasks').textContent = `${tasks.length} ${tasks.length > 1 ? 'tâches' : 'tâche'}`;
+
+            // Mise à jour du tableau détaillé
+            const rowsContainer = byId('rows');
+            rowsContainer.innerHTML = '';
+            
+            rows.forEach(([description, amount]) => {
+                const tr = document.createElement('tr');
+                const td1 = document.createElement('td');
+                td1.textContent = description;
