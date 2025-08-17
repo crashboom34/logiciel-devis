@@ -709,6 +709,9 @@
         };
         const BASE_COORDS = { lat: 43.65, lon: 3.72 }; // Vailhauquès approximatif
         const FUEL_COST_PER_KM = 0.5;
+        const FLOOR_COST_NO_ELEVATOR = 15;
+        const PORTAGE_COST_PER_M = 0.5;
+        const WASTE_COST_PER_M3 = 50;
         async function getDistanceFromCity(city) {
             const key = (city || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             if (CITY_DISTANCES[key]) return CITY_DISTANCES[key];
@@ -1013,6 +1016,38 @@
                 tasksTotal += price;
                 rows.push({ description: `${task.trade} — ${task.label}`, qty: task.qty, unit: task.unit, price });
             });
+
+            const baseTotal = tasksTotal;
+            let siteRate = 0;
+            let siteFixed = 0;
+            const floor = parseInt(byId('etage').value) || 0;
+            if (byId('ascenseur').value === 'Non') siteFixed += floor * FLOOR_COST_NO_ELEVATOR;
+            siteFixed += (parseFloat(byId('portage').value) || 0) * PORTAGE_COST_PER_M;
+            switch (byId('acces').value) {
+                case 'difficile': siteRate += 0.05; break;
+            }
+            switch (byId('stationnement').value) {
+                case 'moyen': siteRate += 0.02; break;
+                case 'difficile': siteRate += 0.05; break;
+            }
+            siteFixed += parseFloat(byId('parking_fees').value) || 0;
+            switch (byId('engins').value) {
+                case 'limité': siteRate += 0.03; break;
+                case 'impossible': siteRate += 0.07; break;
+            }
+            siteFixed += (parseFloat(byId('dechets').value) || 0) * WASTE_COST_PER_M3;
+            switch (byId('complexite').value) {
+                case 'moyenne': siteRate += 0.05; break;
+                case 'haute': siteRate += 0.10; break;
+            }
+            const siteExtra = siteFixed + baseTotal * siteRate;
+            if (siteExtra > 0 && baseTotal > 0) {
+                rows.forEach(row => {
+                    const share = (row.price / baseTotal) * siteExtra;
+                    row.price += share;
+                });
+                tasksTotal += siteExtra;
+            }
 
             // Durée estimée du chantier
             const workDays = totalHours / 7;
