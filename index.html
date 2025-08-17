@@ -721,7 +721,8 @@
             const value = (n || 0).toLocaleString('fr-FR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
-            });
+            })
+                .replace(/[\u202F\u00A0]/g, ' ');
             return `${value} EUR`;
         };
         const byId = id => document.getElementById(id);
