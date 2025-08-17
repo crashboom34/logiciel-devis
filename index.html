@@ -718,7 +718,10 @@
         // Formatting utility that avoids locale-specific non breaking spaces
         // to keep PDF output compatible with basic fonts.
         const formatEUR = n => {
-            const value = (n || 0).toFixed(2).replace('.', ',');
+            const value = (n || 0).toLocaleString('fr-FR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
             return `${value} EUR`;
         };
         const byId = id => document.getElementById(id);
