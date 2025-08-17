@@ -826,13 +826,11 @@
                 if (selectedOption && selectedOption.dataset.unit) {
                     unitDiv.textContent = selectedOption.dataset.unit;
 
-                    // Si c'est un forfait, mettre la quantité à 1 et la désactiver
+                    // Si c'est un forfait, mettre la quantité à 1 mais permettre la modification
                     if (selectedOption.dataset.unit === 'forfait') {
                         qtyInput.value = '1';
-                        qtyInput.disabled = true;
-                    } else {
-                        qtyInput.disabled = false;
                     }
+                    qtyInput.disabled = false;
                 } else {
                     unitDiv.textContent = '—';
                     qtyInput.disabled = false;
@@ -998,7 +996,7 @@
                         price = task.rate * task.qty;
                         break;
                     case 'forfait':
-                        price = task.rate;
+                        price = task.rate * task.qty;
                         break;
                 }
 
@@ -1010,10 +1008,10 @@
                 // Répartir les options sur les tâches
                 price *= (1 + optionRate);
 
-                const hours = task.unit === 'forfait' ? task.hours : task.hours * task.qty;
+                const hours = task.hours * task.qty;
                 totalHours += hours;
                 tasksTotal += price;
-                rows.push({ description: `${task.trade} — ${task.label}`, qty: task.unit === 'forfait' ? 1 : task.qty, unit: task.unit, price });
+                rows.push({ description: `${task.trade} — ${task.label}`, qty: task.qty, unit: task.unit, price });
             });
 
             // Durée estimée du chantier
