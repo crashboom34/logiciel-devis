@@ -268,7 +268,11 @@
             width: auto;
             padding: 8px 12px;
         }
-        
+
+        .task-row.manual {
+            grid-template-columns: 1.2fr 1.2fr 0.6fr 0.6fr 0.6fr auto;
+        }
+
         .pill {
             padding: 4px 8px;
             border-radius: 10px;
@@ -413,8 +417,11 @@
                     <h2 style="margin-top:0">2) Métiers & tâches</h2>
                     <div class="grid-gap">
                         <div id="tasks"></div>
-                        <button id="add-task" class="btn btn-ghost" type="button">+ Ajouter une tâche</button>
-                        <div class="muted">Sélectionnez un métier, puis une tâche, indiquez la quantité.</div>
+                        <div class="row">
+                            <button id="add-task" class="btn btn-ghost" type="button">+ Ajouter une tâche</button>
+                            <button id="add-manual-task" class="btn btn-ghost" type="button">+ Tâche libre</button>
+                        </div>
+                        <div class="muted">Sélectionnez un métier puis une tâche, ou ajoutez une tâche libre, puis indiquez la quantité.</div>
                     </div>
                 </div>
                 
@@ -659,6 +666,20 @@
                 { id: 'drainage_peripherique', label: 'Drainage périphérique', unit: 'ml', rate: 40, min: 400, hours: 0.4 },
                 { id: 'evacuation_deblais', label: 'Évacuation des déblais', unit: 'm²', rate: 20, min: 300, hours: 0.3 },
                 { id: 'remblaiement', label: 'Remblaiement', unit: 'm²', rate: 8, min: 200, hours: 0.1 }
+            ],
+            "Serrurerie": [
+                { id: 'porte_blindee', label: 'Pose porte blindée', unit: 'forfait', rate: 1200, min: 1200, hours: 20 },
+                { id: 'grille_securite', label: 'Grille de sécurité', unit: 'm²', rate: 220, min: 440, hours: 1.5 },
+                { id: 'rideau_metal', label: 'Rideau métallique motorisé', unit: 'forfait', rate: 2500, min: 2500, hours: 35 },
+                { id: 'serrure_3points', label: 'Serrure 3 points — pose', unit: 'forfait', rate: 350, min: 350, hours: 4 },
+                { id: 'depannage_serrurerie', label: 'Dépannage ouverture porte', unit: 'forfait', rate: 120, min: 120, hours: 2 }
+            ],
+            "Aménagement extérieur": [
+                { id: 'pose_gazon', label: 'Pose gazon en rouleau', unit: 'm²', rate: 15, min: 300, hours: 0.1 },
+                { id: 'cloture_rigide', label: 'Clôture rigide', unit: 'ml', rate: 60, min: 300, hours: 0.5 },
+                { id: 'allee_pavee', label: 'Allée pavée', unit: 'm²', rate: 75, min: 600, hours: 0.4 },
+                { id: 'terrasse_bois', label: 'Terrasse bois', unit: 'm²', rate: 110, min: 1000, hours: 0.7 },
+                { id: 'abri_jardin', label: 'Abri de jardin — montage', unit: 'forfait', rate: 650, min: 650, hours: 16 }
             ]
         };
 
@@ -834,34 +855,112 @@
             updatePricing();
         }
 
+        function addManualTaskRow() {
+            const tasksContainer = byId('tasks');
+            const row = document.createElement('div');
+            row.className = 'task-row manual';
+
+            const tradeInput = document.createElement('input');
+            tradeInput.className = 'trade-input';
+            tradeInput.type = 'text';
+            tradeInput.placeholder = 'Métier';
+
+            const labelInput = document.createElement('input');
+            labelInput.className = 'label-input';
+            labelInput.type = 'text';
+            labelInput.placeholder = 'Tâche';
+
+            const qtyInput = document.createElement('input');
+            qtyInput.className = 'qty-input';
+            qtyInput.type = 'number';
+            qtyInput.min = '0';
+            qtyInput.value = '1';
+            qtyInput.placeholder = 'Qté';
+
+            const unitInput = document.createElement('input');
+            unitInput.className = 'unit-input';
+            unitInput.type = 'text';
+            unitInput.placeholder = 'Unité';
+
+            const rateInput = document.createElement('input');
+            rateInput.className = 'rate-input';
+            rateInput.type = 'number';
+            rateInput.min = '0';
+            rateInput.placeholder = 'PU HT';
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-ghost';
+            deleteBtn.type = 'button';
+            deleteBtn.textContent = '🗑️';
+
+            [tradeInput, labelInput, qtyInput, unitInput, rateInput].forEach(el => {
+                el.addEventListener('input', updatePricing);
+            });
+            deleteBtn.addEventListener('click', function() {
+                row.remove();
+                updatePricing();
+            });
+
+            row.appendChild(tradeInput);
+            row.appendChild(labelInput);
+            row.appendChild(qtyInput);
+            row.appendChild(unitInput);
+            row.appendChild(rateInput);
+            row.appendChild(deleteBtn);
+
+            tasksContainer.appendChild(row);
+            updatePricing();
+        }
+
         // Fonction pour lire toutes les tâches
         function readTasks() {
             const taskRows = document.querySelectorAll('.task-row');
             const result = [];
 
             taskRows.forEach(row => {
-                const tradeSelect = row.querySelector('.trade-select');
-                const taskSelect = row.querySelector('.task-select');
-                const qtyInput = row.querySelector('.qty-input');
-
-                const trade = tradeSelect.value;
-                const taskId = taskSelect.value;
-                const qty = parseFloat(qtyInput.value) || 0;
-
-                if (trade && taskId && qty > 0) {
-                    const taskOption = taskSelect.selectedOptions[0];
-                    if (taskOption) {
+                if (row.classList.contains('manual')) {
+                    const trade = row.querySelector('.trade-input').value.trim();
+                    const label = row.querySelector('.label-input').value.trim();
+                    const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+                    const unit = row.querySelector('.unit-input').value.trim();
+                    const rate = parseFloat(row.querySelector('.rate-input').value) || 0;
+                    if (trade && label && qty > 0 && rate > 0 && unit) {
                         result.push({
                             trade: trade,
-                            taskId: taskId,
-                            label: taskOption.textContent,
-                            unit: taskOption.dataset.unit,
-                            rate: parseFloat(taskOption.dataset.rate),
-                            min: parseFloat(taskOption.dataset.min),
-                            hours: parseFloat(taskOption.dataset.hours),
+                            taskId: 'custom',
+                            label: label,
+                            unit: unit,
+                            rate: rate,
+                            min: 0,
+                            hours: 0,
                             qty: qty,
-                            tva55: taskOption.dataset.tva55 === '1'
+                            tva55: false
                         });
+                    }
+                } else {
+                    const tradeSelect = row.querySelector('.trade-select');
+                    const taskSelect = row.querySelector('.task-select');
+                    const qtyInput = row.querySelector('.qty-input');
+
+                    const trade = tradeSelect.value;
+                    const taskId = taskSelect.value;
+                    const qty = parseFloat(qtyInput.value) || 0;
+
+                    if (trade && taskId && qty > 0) {
+                        const taskOption = taskSelect.selectedOptions[0];
+                        if (taskOption) {
+                            result.push({
+                                trade: trade,
+                                taskId: taskId,
+                                label: taskOption.textContent,
+                                unit: taskOption.dataset.unit,
+                                rate: parseFloat(taskOption.dataset.rate),
+                                min: parseFloat(taskOption.dataset.min),
+                                hours: parseFloat(taskOption.dataset.hours),
+                                qty: qty,
+                                tva55: taskOption.dataset.tva55 === '1'
+                            });
+                        }
                     }
                 }
             });
@@ -988,6 +1087,7 @@
 
         // Initialisation
         byId('add-task').addEventListener('click', addTaskRow);
+        byId('add-manual-task').addEventListener('click', addManualTaskRow);
         const optionIds = ['urgence', 'weekend', 'nuit', 'pack', 'tva_mode'];
         optionIds.forEach(id => {
             const el = byId(id);
