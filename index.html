@@ -1129,6 +1129,14 @@
             const el = byId(id);
             if (el) el.addEventListener('change', updatePricing);
         });
+        const siteIds = ['etage', 'ascenseur', 'portage', 'acces', 'stationnement', 'parking_fees', 'engins', 'dechets', 'complexite'];
+        siteIds.forEach(id => {
+            const el = byId(id);
+            if (el) {
+                el.addEventListener('change', updatePricing);
+                el.addEventListener('input', updatePricing);
+            }
+        });
         const logement2ansEl = byId('logement_2ans');
         if (logement2ansEl) logement2ansEl.addEventListener('change', updatePricing);
         const villeEl = byId('ville');
