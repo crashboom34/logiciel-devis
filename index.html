@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>Devis intelligent — SARL BRUNO MIRA</title>
+    <title>Devis intelligent</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -322,15 +322,37 @@
 <body>
     <div class="container">
         <header>
-            <div class="logo">BM</div>
+            <div class="logo" id="company-logo">BM</div>
             <div>
-                <h1>Devis intelligent — SARL BRUNO MIRA</h1>
+                <h1>Devis intelligent — <span id="company-title">SARL BRUNO MIRA</span></h1>
                 <div class="sub">Formulaire multi‑étapes · Tarification automatique par accès chantier, métiers et tâches · PDF & capture de lead</div>
+                <button id="btn-company" class="btn btn-ghost" type="button" style="margin-top:8px">Infos entreprise</button>
             </div>
         </header>
         
         <div class="layout">
             <div>
+                <div id="company-settings" class="card" style="margin-bottom:12px;display:none">
+                    <h2 style="margin-top:0">Informations entreprise</h2>
+                    <div class="row3">
+                        <div><label>Nom</label><input id="c-name"/></div>
+                        <div><label>Email</label><input id="c-email" type="email"/></div>
+                        <div><label>Téléphone</label><input id="c-phone"/></div>
+                    </div>
+                    <div class="row3" style="margin-top:10px">
+                        <div><label>Adresse</label><input id="c-address"/></div>
+                        <div><label>SIREN</label><input id="c-siren"/></div>
+                        <div><label>SIRET</label><input id="c-siret"/></div>
+                    </div>
+                    <div class="row3" style="margin-top:10px">
+                        <div><label>RCS</label><input id="c-rcs"/></div>
+                        <div><label>TVA</label><input id="c-tva"/></div>
+                        <div><label>Assurance</label><input id="c-assurance"/></div>
+                    </div>
+                    <div style="margin-top:10px;text-align:right">
+                        <button id="btn-save-company" class="btn btn-primary" type="button">Enregistrer</button>
+                    </div>
+                </div>
                 <div class="stepper" id="stepper"></div>
                 
                 <div id="step-1" class="card">
@@ -567,14 +589,26 @@
                     Estimation indicative. Visite technique et devis signé nécessaires pour valider prix, quantités et délais. TVA réduite sous conditions.
                 </div>
                 
-                <div class="muted" style="margin-top:10px">
-                    SARL BRUNO MIRA — SIREN 000 000 000 — RCS XXX — TVA FRXX — RC & décennale n° XXXXX — 34980 Combaillaux — contact@exemple.fr — 04 xx xx xx xx. Validité 30 jours.
-                </div>
+                <div class="muted" style="margin-top:10px" id="company-legal"></div>
             </div>
         </div>
     </div>
 
     <script>
+        // Informations entreprise
+        const DEFAULT_COMPANY = {
+            name: 'SARL BRUNO MIRA',
+            address: '34980 Combaillaux',
+            phone: '04 xx xx xx xx',
+            email: 'contact@exemple.fr',
+            siren: '000 000 000',
+            siret: '123 456 789 00010',
+            rcs: 'XXX',
+            tva: 'FRXX',
+            insurance: 'RC & décennale n° XXXXX'
+        };
+        let company = { ...DEFAULT_COMPANY, ...JSON.parse(localStorage.getItem('company') || '{}') };
+
         // Configuration
         const CATALOG = {
             "Maçonnerie": [
@@ -753,6 +787,40 @@
             return `${value} EUR`;
         };
         const byId = id => document.getElementById(id);
+
+        function renderCompany() {
+            byId('company-title').textContent = company.name;
+            document.title = 'Devis intelligent — ' + company.name;
+            const legal = `${company.name} — SIREN ${company.siren} — RCS ${company.rcs} — TVA ${company.tva} — ${company.insurance} — ${company.address} — ${company.email} — ${company.phone}. Validité 30 jours.`;
+            byId('company-legal').textContent = legal;
+            const logo = company.name.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+            byId('company-logo').textContent = logo;
+            byId('c-name').value = company.name;
+            byId('c-address').value = company.address;
+            byId('c-phone').value = company.phone;
+            byId('c-email').value = company.email;
+            byId('c-siren').value = company.siren;
+            byId('c-siret').value = company.siret;
+            byId('c-rcs').value = company.rcs;
+            byId('c-tva').value = company.tva;
+            byId('c-assurance').value = company.insurance;
+        }
+
+        function saveCompany() {
+            company = {
+                name: byId('c-name').value.trim(),
+                address: byId('c-address').value.trim(),
+                phone: byId('c-phone').value.trim(),
+                email: byId('c-email').value.trim(),
+                siren: byId('c-siren').value.trim(),
+                siret: byId('c-siret').value.trim(),
+                rcs: byId('c-rcs').value.trim(),
+                tva: byId('c-tva').value.trim(),
+                insurance: byId('c-assurance').value.trim()
+            };
+            localStorage.setItem('company', JSON.stringify(company));
+            renderCompany();
+        }
 
         // Fonction pour créer une ligne de tâche
         function addTaskRow() {
@@ -1200,11 +1268,15 @@
                 doc.text('Informations Entreprise', 14, y);
                 y += 6;
                 doc.setFont('helvetica', 'normal');
-                doc.text('Entreprise : Votre SARL BTP', 14, y); y += 6;
-                doc.text('Adresse : 123 Rue Exemple, 34000 Montpellier', 14, y); y += 6;
-                doc.text('Téléphone : 02 00 00 00 00', 14, y); y += 6;
-                doc.text('SIRET : 123 456 789 00010', 14, y); y += 6;
-                doc.text('Assurance décennale : Nom Assurance - Police n°XXXXXX', 14, y); y += 10;
+                doc.text(`Entreprise : ${company.name}`, 14, y); y += 6;
+                doc.text(`Adresse : ${company.address}`, 14, y); y += 6;
+                doc.text(`Téléphone : ${company.phone}`, 14, y); y += 6;
+                doc.text(`Email : ${company.email}`, 14, y); y += 6;
+                doc.text(`SIREN : ${company.siren}`, 14, y); y += 6;
+                doc.text(`SIRET : ${company.siret}`, 14, y); y += 6;
+                doc.text(`RCS : ${company.rcs}`, 14, y); y += 6;
+                doc.text(`TVA : ${company.tva}`, 14, y); y += 6;
+                doc.text(`Assurance décennale : ${company.insurance}`, 14, y); y += 10;
 
                 doc.setFont('helvetica', 'bold');
                 doc.text('Informations Client', 14, y);
@@ -1259,6 +1331,23 @@
                 doc.save('devis.pdf');
             });
         }
+
+        const btnCompany = byId('btn-company');
+        if (btnCompany) {
+            btnCompany.addEventListener('click', function () {
+                const cs = byId('company-settings');
+                cs.style.display = cs.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+        const btnSaveCompany = byId('btn-save-company');
+        if (btnSaveCompany) {
+            btnSaveCompany.addEventListener('click', function () {
+                saveCompany();
+                byId('company-settings').style.display = 'none';
+            });
+        }
+
+        renderCompany();
 
     </script>
 </body>
