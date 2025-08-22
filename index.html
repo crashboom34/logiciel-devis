@@ -258,7 +258,7 @@
         
         .task-row {
             display: grid;
-            grid-template-columns: 1.2fr 1.2fr 0.6fr 0.6fr auto;
+            grid-template-columns: 1.2fr 1.2fr 0.6fr 0.6fr 1.2fr auto;
             gap: 8px;
             align-items: center;
             margin-bottom: 8px;
@@ -270,7 +270,7 @@
         }
 
         .task-row.manual {
-            grid-template-columns: 1.2fr 1.2fr 0.6fr 0.6fr 0.6fr auto;
+            grid-template-columns: 1.2fr 1.2fr 0.6fr 0.6fr 0.6fr 1.2fr auto;
         }
 
         .pill {
@@ -867,6 +867,11 @@
             unitDiv.className = 'pill';
             unitDiv.textContent = '—';
 
+            const detailInput = document.createElement('input');
+            detailInput.className = 'detail-input';
+            detailInput.type = 'text';
+            detailInput.placeholder = 'Détails';
+
             // Bouton supprimer
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'btn btn-ghost';
@@ -919,6 +924,7 @@
             });
 
             qtyInput.addEventListener('input', updatePricing);
+            detailInput.addEventListener('input', updatePricing);
 
             deleteBtn.addEventListener('click', function() {
                 row.remove();
@@ -930,6 +936,7 @@
             row.appendChild(taskSelect);
             row.appendChild(qtyInput);
             row.appendChild(unitDiv);
+            row.appendChild(detailInput);
             row.appendChild(deleteBtn);
 
             tasksContainer.appendChild(row);
@@ -969,12 +976,17 @@
             rateInput.min = '0';
             rateInput.placeholder = 'PU HT';
 
+            const detailInput = document.createElement('input');
+            detailInput.className = 'detail-input';
+            detailInput.type = 'text';
+            detailInput.placeholder = 'Détails';
+
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'btn btn-ghost';
             deleteBtn.type = 'button';
             deleteBtn.textContent = '🗑️';
 
-            [tradeInput, labelInput, qtyInput, unitInput, rateInput].forEach(el => {
+            [tradeInput, labelInput, qtyInput, unitInput, rateInput, detailInput].forEach(el => {
                 el.addEventListener('input', updatePricing);
             });
             deleteBtn.addEventListener('click', function() {
@@ -987,6 +999,7 @@
             row.appendChild(qtyInput);
             row.appendChild(unitInput);
             row.appendChild(rateInput);
+            row.appendChild(detailInput);
             row.appendChild(deleteBtn);
 
             tasksContainer.appendChild(row);
@@ -1005,6 +1018,7 @@
                     const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
                     const unit = row.querySelector('.unit-input').value.trim();
                     const rate = parseFloat(row.querySelector('.rate-input').value) || 0;
+                    const detail = row.querySelector('.detail-input').value.trim();
                     if (trade && label && qty > 0 && rate > 0 && unit) {
                         result.push({
                             trade: trade,
@@ -1015,13 +1029,15 @@
                             min: 0,
                             hours: 0,
                             qty: qty,
-                            tva55: false
+                            tva55: false,
+                            detail: detail
                         });
                     }
                 } else {
                     const tradeSelect = row.querySelector('.trade-select');
                     const taskSelect = row.querySelector('.task-select');
                     const qtyInput = row.querySelector('.qty-input');
+                    const detail = row.querySelector('.detail-input').value.trim();
 
                     const trade = tradeSelect.value;
                     const taskId = taskSelect.value;
@@ -1039,7 +1055,8 @@
                                 min: parseFloat(taskOption.dataset.min),
                                 hours: parseFloat(taskOption.dataset.hours),
                                 qty: qty,
-                                tva55: taskOption.dataset.tva55 === '1'
+                                tva55: taskOption.dataset.tva55 === '1',
+                                detail: detail
                             });
                         }
                     }
@@ -1091,7 +1108,7 @@
                 const hours = task.hours * task.qty;
                 totalHours += hours;
                 tasksTotal += price;
-                rows.push({ description: `${task.trade} — ${task.label}`, qty: task.qty, unit: task.unit, price });
+                rows.push({ description: `${task.trade} — ${task.label}${task.detail ? ' — ' + task.detail : ''}`, qty: task.qty, unit: task.unit, price });
             });
 
             const baseTotal = tasksTotal;
@@ -1236,7 +1253,7 @@
             if (tasks.length > 0) {
                 html += '<h3>Tâches</h3><ul>';
                 tasks.forEach(t => {
-                    html += `<li>${t.trade} — ${t.label} (${t.qty} ${t.unit})</li>`;
+                    html += `<li>${t.trade} — ${t.label} (${t.qty} ${t.unit})${t.detail ? ': ' + t.detail : ''}</li>`;
                 });
                 html += '</ul>';
             }
