@@ -463,20 +463,29 @@
                                 <option value="non">Non</option>
                                 <option value="oui">Oui (+25%)</option>
                             </select>
-                        </div>
-                        <div>
-                            <label>Travail de nuit</label>
-                            <select id="nuit">
-                                <option value="non">Non</option>
-                                <option value="oui">Oui (+20%)</option>
-                            </select>
-                        </div>
                     </div>
-                    
-                    <div class="row" style="margin-top:10px">
-                        <div>
-                            <label>Pack / Marge</label>
-                            <select id="pack">
+                    <div>
+                        <label>Travail de nuit</label>
+                        <select id="nuit">
+                            <option value="non">Non</option>
+                            <option value="oui">Oui (+20%)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px">
+                    <label>Durée estimée</label>
+                    <select id="speed">
+                        <option value="rapide">Rapide</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="lent">Lent</option>
+                    </select>
+                </div>
+
+                <div class="row" style="margin-top:10px">
+                    <div>
+                        <label>Pack / Marge</label>
+                        <select id="pack">
                                 <option value="standard">Standard (x1.00)</option>
                                 <option value="confort">Confort (x1.12)</option>
                                 <option value="premium">Premium (x1.25)</option>
@@ -1118,7 +1127,10 @@
             }
 
             // Durée estimée du chantier
-            const workDays = totalHours / 7;
+            let workDays = totalHours / 7;
+            const speed = byId('speed') ? byId('speed').value : 'normal';
+            const speedFactor = speed === 'rapide' ? 0.8 : speed === 'lent' ? 1.2 : 1;
+            workDays *= speedFactor;
             const days = totalHours > 0 ? Math.ceil(workDays) : 0;
 
             // Coût des trajets basé sur la durée réelle
@@ -1192,7 +1204,7 @@
         // Initialisation
         byId('add-task').addEventListener('click', addTaskRow);
         byId('add-manual-task').addEventListener('click', addManualTaskRow);
-        const optionIds = ['urgence', 'weekend', 'nuit', 'pack', 'tva_mode'];
+        const optionIds = ['urgence', 'weekend', 'nuit', 'speed', 'pack', 'tva_mode'];
         optionIds.forEach(id => {
             const el = byId(id);
             if (el) el.addEventListener('change', updatePricing);
