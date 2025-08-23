@@ -273,6 +273,18 @@
             grid-template-columns: 1.2fr 1.2fr 0.6fr 0.6fr 0.6fr 1.2fr auto;
         }
 
+        @media (max-width: 600px) {
+            .task-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            .task-row .trade-select,
+            .task-row .task-select,
+            .task-row .detail-input,
+            .task-row button {
+                grid-column: span 2;
+            }
+        }
+
         .pill {
             padding: 4px 8px;
             border-radius: 10px;
@@ -711,6 +723,7 @@
                 { id: 'tranchee_technique', label: 'Tranchée technique', unit: 'ml', rate: 30, min: 300, hours: 0.25 },
                 { id: 'drainage_peripherique', label: 'Drainage périphérique', unit: 'ml', rate: 40, min: 400, hours: 0.4 },
                 { id: 'evacuation_deblais', label: 'Évacuation des déblais', unit: 'm²', rate: 20, min: 300, hours: 0.3 },
+                { id: 'couche_forme_tout_venant', label: 'Réalisation de la couche de forme en tout-venant', unit: 'm²', rate: 25, min: 400, hours: 0.3 },
                 { id: 'remblaiement', label: 'Remblaiement', unit: 'm²', rate: 8, min: 200, hours: 0.1 }
             ],
             "Serrurerie": [
