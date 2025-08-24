@@ -182,6 +182,8 @@
             font-weight: 800;
             letter-spacing: 0.2px;
             transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            border-radius: 8px;
+            padding: 8px 14px;
         }
         
         .btn-primary {
@@ -204,6 +206,7 @@
 
         .btn-ghost:hover {
             background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-1px);
         }
         
         .muted {
@@ -555,7 +558,8 @@
                     <div id="recap"></div>
                     <div class="hr"></div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <button id="btn-pdf" class="btn btn-ghost" type="button">Télécharger le PDF</button>
+                        <button id="btn-pdf" class="btn btn-ghost" type="button">Télécharger le devis</button>
+                        <button id="btn-invoice" class="btn btn-ghost" type="button">Télécharger la facture</button>
                         <button id="btn-send" class="btn btn-primary" type="button">Envoyer & être rappelé</button>
                         <button id="btn-edit" class="btn btn-ghost" type="button">← Modifier</button>
                     </div>
@@ -1294,85 +1298,96 @@
             });
         }
 
+        async function generatePdf(kind) {
+            await updatePricing();
+            buildRecap();
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(18);
+            const title = kind === 'facture' ? 'FACTURE' : 'DEVIS';
+            doc.text(title, 105, 20, { align: 'center' });
+
+            let y = 30;
+            doc.setFontSize(12);
+            doc.text('Informations Entreprise', 14, y);
+            y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Entreprise : ${company.name}`, 14, y); y += 6;
+            doc.text(`Adresse : ${company.address}`, 14, y); y += 6;
+            doc.text(`Téléphone : ${company.phone}`, 14, y); y += 6;
+            doc.text(`Email : ${company.email}`, 14, y); y += 6;
+            doc.text(`SIREN : ${company.siren}`, 14, y); y += 6;
+            doc.text(`SIRET : ${company.siret}`, 14, y); y += 6;
+            doc.text(`RCS : ${company.rcs}`, 14, y); y += 6;
+            doc.text(`TVA : ${company.tva}`, 14, y); y += 6;
+            doc.text(`Assurance décennale : ${company.insurance}`, 14, y); y += 10;
+
+            doc.setFont('helvetica', 'bold');
+            doc.text('Informations Client', 14, y);
+            y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Nom : ${byId('name').value}`, 14, y); y += 6;
+            doc.text(`Adresse : ${byId('ville').value}`, 14, y); y += 6;
+            doc.text(`Téléphone : ${byId('phone').value}`, 14, y); y += 10;
+
+            const label = kind === 'facture' ? 'Facture' : 'Devis';
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Détails ${kind === 'facture' ? 'de la' : 'du'} ${label}`, 14, y);
+            y += 6;
+
+            if (pdfRows.length > 0 && doc.autoTable) {
+                doc.autoTable({
+                    startY: y,
+                    head: [['Description', 'Quantité', 'PU HT (EUR)', 'Total HT (EUR)']],
+                    body: pdfRows.map(r => [r.description, r.qty.toString(), formatEUR(r.unitPrice), formatEUR(r.total)]),
+                    styles: { fontSize: 10, cellPadding: 3 },
+                    headStyles: { fillColor: [0, 0, 0], textColor: 255 },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    theme: 'striped'
+                });
+                y = doc.lastAutoTable.finalY + 10;
+            }
+
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Sous-total HT : ${byId('f-total-ht').textContent}`, 196, y, { align: 'right' });
+            doc.text(`TVA (${byId('tva-rate').textContent}) : ${byId('tva-amt').textContent}`, 196, y + 7, { align: 'right' });
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(220, 38, 38);
+            doc.text(`Total TTC : ${byId('f-total-ttc').textContent}`, 196, y + 14, { align: 'right' });
+            doc.setTextColor(0, 0, 0);
+            y += 26;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+
+            const addTextBlock = text => {
+                const lines = doc.splitTextToSize(text, 182);
+                doc.text(lines, 14, y);
+                y += lines.length * 5;
+            };
+
+            if (kind === 'devis') {
+                addTextBlock('Durée de validité du devis : 30 jours');
+            }
+            addTextBlock("Prix indiqué : sous réserve d'évolution du coût des matériaux, ajusté à la commande, selon stock et la livraison.");
+            addTextBlock(`TVA applicable : ${byId('tva-rate').textContent}`);
+            addTextBlock("Mention légale : 50% d'acompte à la commande, solde à la livraison.");
+            addTextBlock('SRT légales : TVA applicable, RC Pro, coordonnées disponibles sur demande.');
+
+            doc.save(`${kind}.pdf`);
+        }
+
         const btnPdf = byId('btn-pdf');
         if (btnPdf) {
-            btnPdf.addEventListener('click', async function () {
-                await updatePricing();
-                buildRecap();
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
+            btnPdf.addEventListener('click', () => generatePdf('devis'));
+        }
 
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(18);
-                doc.text('DEVIS', 105, 20, { align: 'center' });
-
-                let y = 30;
-                doc.setFontSize(12);
-                doc.text('Informations Entreprise', 14, y);
-                y += 6;
-                doc.setFont('helvetica', 'normal');
-                doc.text(`Entreprise : ${company.name}`, 14, y); y += 6;
-                doc.text(`Adresse : ${company.address}`, 14, y); y += 6;
-                doc.text(`Téléphone : ${company.phone}`, 14, y); y += 6;
-                doc.text(`Email : ${company.email}`, 14, y); y += 6;
-                doc.text(`SIREN : ${company.siren}`, 14, y); y += 6;
-                doc.text(`SIRET : ${company.siret}`, 14, y); y += 6;
-                doc.text(`RCS : ${company.rcs}`, 14, y); y += 6;
-                doc.text(`TVA : ${company.tva}`, 14, y); y += 6;
-                doc.text(`Assurance décennale : ${company.insurance}`, 14, y); y += 10;
-
-                doc.setFont('helvetica', 'bold');
-                doc.text('Informations Client', 14, y);
-                y += 6;
-                doc.setFont('helvetica', 'normal');
-                doc.text(`Nom : ${byId('name').value}`, 14, y); y += 6;
-                doc.text(`Adresse : ${byId('ville').value}`, 14, y); y += 6;
-                doc.text(`Téléphone : ${byId('phone').value}`, 14, y); y += 10;
-
-                doc.setFont('helvetica', 'bold');
-                doc.text('Détails du Devis', 14, y);
-                y += 6;
-
-                if (pdfRows.length > 0 && doc.autoTable) {
-                    doc.autoTable({
-                        startY: y,
-                        head: [['Description', 'Quantité', 'PU HT (EUR)', 'Total HT (EUR)']],
-                        body: pdfRows.map(r => [r.description, r.qty.toString(), formatEUR(r.unitPrice), formatEUR(r.total)]),
-                        styles: { fontSize: 10, cellPadding: 3 },
-                        headStyles: { fillColor: [0, 0, 0], textColor: 255 },
-                        alternateRowStyles: { fillColor: [245, 245, 245] },
-                        theme: 'striped'
-                    });
-                    y = doc.lastAutoTable.finalY + 10;
-                }
-
-                doc.setFontSize(12);
-                doc.setFont('helvetica', 'normal');
-                doc.text(`Sous-total HT : ${byId('f-total-ht').textContent}`, 196, y, { align: 'right' });
-                doc.text(`TVA (${byId('tva-rate').textContent}) : ${byId('tva-amt').textContent}`, 196, y + 7, { align: 'right' });
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(220, 38, 38);
-                doc.text(`Total TTC : ${byId('f-total-ttc').textContent}`, 196, y + 14, { align: 'right' });
-                doc.setTextColor(0, 0, 0);
-                y += 26;
-
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-
-                const addTextBlock = text => {
-                    const lines = doc.splitTextToSize(text, 182);
-                    doc.text(lines, 14, y);
-                    y += lines.length * 5;
-                };
-
-                addTextBlock('Durée de validité du devis : 30 jours');
-                addTextBlock("Prix indiqué : sous réserve d'évolution du coût des matériaux, ajusté à la commande, selon stock et la livraison.");
-                addTextBlock(`TVA applicable : ${byId('tva-rate').textContent}`);
-                addTextBlock("Mention légale : 50% d'acompte à la commande, solde à la livraison.");
-                addTextBlock('SRT légales : TVA applicable, RC Pro, coordonnées disponibles sur demande.');
-
-                doc.save('devis.pdf');
-            });
+        const btnInvoice = byId('btn-invoice');
+        if (btnInvoice) {
+            btnInvoice.addEventListener('click', () => generatePdf('facture'));
         }
 
         const btnCompany = byId('btn-company');
