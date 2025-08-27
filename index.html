@@ -620,9 +620,10 @@
             <div id="archives" class="card" style="margin-top:12px;display:none">
                 <h2 style="margin-top:0">Archives</h2>
                 <ul id="archive-list"></ul>
+                <button id="btn-close-archives" class="btn btn-ghost" type="button">Fermer</button>
             </div>
-            
-            <div class="card" aria-live="polite" aria-atomic="true">
+
+            <div id="realtime-estimation" class="card" aria-live="polite" aria-atomic="true">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
                     <h2 style="margin:0">Estimation en temps réel</h2>
                     <span class="badge" id="count-tasks">0 tâche</span>
@@ -1590,6 +1591,18 @@
                 } else {
                     arch.style.display = 'none';
                 }
+            });
+        }
+
+        const btnCloseArchives = byId('btn-close-archives');
+        if (btnCloseArchives) {
+            btnCloseArchives.addEventListener('click', function () {
+                const arch = byId('archives');
+                arch.style.display = 'none';
+                const list = byId('archive-list');
+                if (list) list.innerHTML = '';
+                const rt = byId('realtime-estimation');
+                if (rt) rt.scrollIntoView({ behavior: 'smooth' });
             });
         }
 
