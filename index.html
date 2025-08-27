@@ -522,12 +522,19 @@
                 </div>
 
                 <div style="margin-top:10px">
-                    <label>Durée estimée</label>
-                    <select id="speed">
-                        <option value="rapide">Rapide</option>
-                        <option value="normal" selected>Normal</option>
-                        <option value="lent">Lent</option>
+                    <label>Durée du chantier</label>
+                    <select id="duration_mode">
+                        <option value="auto" selected>Automatique</option>
+                        <option value="manual">Paramétrable</option>
                     </select>
+                    <div id="speed-container" style="margin-top:5px">
+                        <select id="speed">
+                            <option value="rapide">Rapide</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="lent">Lent</option>
+                        </select>
+                    </div>
+                    <input type="number" id="manual_days" placeholder="jours" min="1" style="margin-top:5px;display:none"/>
                 </div>
 
                 <div class="row" style="margin-top:10px">
@@ -550,7 +557,16 @@
                             <div class="muted">Auto : 5,5% si uniquement tâches éligibles, sinon 10% si logement > 2 ans, sinon 20%.</div>
                         </div>
                     </div>
-                    
+
+                    <div style="margin-top:10px">
+                        <label>Remise</label>
+                        <select id="discount_mode">
+                            <option value="auto" selected>Automatique</option>
+                            <option value="manual">Paramétrable</option>
+                        </select>
+                        <input type="number" id="discount_value" placeholder="%" min="0" max="100" style="margin-top:5px;display:none"/>
+                    </div>
+
                     <div style="margin-top:10px">
                         <label><input id="logement_2ans" type="checkbox" checked/> Logement achevé depuis plus de 2 ans</label>
                     </div>
@@ -1219,11 +1235,18 @@
             }
 
             // Durée estimée du chantier
-            let workDays = totalHours / 7;
-            const speed = byId('speed') ? byId('speed').value : 'normal';
-            const speedFactor = speed === 'rapide' ? 0.8 : speed === 'lent' ? 1.2 : 1;
-            workDays *= speedFactor;
-            const days = totalHours > 0 ? Math.ceil(workDays) : 0;
+            let workDays, days;
+            const durationMode = byId('duration_mode') ? byId('duration_mode').value : 'auto';
+            if (durationMode === 'manual') {
+                days = parseFloat(byId('manual_days').value) || 0;
+                workDays = days;
+            } else {
+                workDays = totalHours / 7;
+                const speed = byId('speed') ? byId('speed').value : 'normal';
+                const speedFactor = speed === 'rapide' ? 0.8 : speed === 'lent' ? 1.2 : 1;
+                workDays *= speedFactor;
+                days = totalHours > 0 ? Math.ceil(workDays) : 0;
+            }
 
             // Coût des trajets basé sur la durée réelle
             const distance = await getDistanceFromCity(byId('ville').value);
@@ -1242,12 +1265,20 @@
 
             let totalHT = tasksTotal;
 
-            // Remise commerciale automatique
-            const remiseThreshold = 10000;
-            const remiseRate = totalHT > remiseThreshold ? 0.05 : 0;
+            // Remise commerciale
+            const discountMode = byId('discount_mode') ? byId('discount_mode').value : 'auto';
             let remiseAmount = 0;
-            if (remiseRate > 0) {
-                remiseAmount = totalHT * remiseRate;
+            if (discountMode === 'manual') {
+                const rate = parseFloat(byId('discount_value').value) || 0;
+                remiseAmount = totalHT * rate / 100;
+            } else {
+                const remiseThreshold = 10000;
+                const remiseRate = totalHT > remiseThreshold ? 0.05 : 0;
+                if (remiseRate > 0) {
+                    remiseAmount = totalHT * remiseRate;
+                }
+            }
+            if (remiseAmount > 0) {
                 totalHT -= remiseAmount;
                 byId('discount-row').style.display = '';
                 byId('discount-amt').textContent = '-' + formatEUR(remiseAmount);
@@ -1339,11 +1370,34 @@
         // Initialisation
         byId('add-task').addEventListener('click', addTaskRow);
         byId('add-manual-task').addEventListener('click', addManualTaskRow);
-        const optionIds = ['urgence', 'weekend', 'nuit', 'speed', 'pack', 'tva_mode'];
+        const optionIds = ['urgence', 'weekend', 'nuit', 'speed', 'pack', 'tva_mode', 'discount_mode', 'duration_mode'];
         optionIds.forEach(id => {
             const el = byId(id);
             if (el) el.addEventListener('change', updatePricing);
         });
+        const inputIds = ['discount_value', 'manual_days'];
+        inputIds.forEach(id => {
+            const el = byId(id);
+            if (el) el.addEventListener('input', updatePricing);
+        });
+
+        function toggleDiscountInput() {
+            const mode = byId('discount_mode').value;
+            byId('discount_value').style.display = mode === 'manual' ? '' : 'none';
+            if (mode !== 'manual') byId('discount_value').value = '';
+        }
+        function toggleDurationInput() {
+            const mode = byId('duration_mode').value;
+            byId('speed-container').style.display = mode === 'manual' ? 'none' : '';
+            byId('manual_days').style.display = mode === 'manual' ? '' : 'none';
+            if (mode !== 'manual') byId('manual_days').value = '';
+        }
+        const discountModeEl = byId('discount_mode');
+        if (discountModeEl) discountModeEl.addEventListener('change', toggleDiscountInput);
+        const durationModeEl = byId('duration_mode');
+        if (durationModeEl) durationModeEl.addEventListener('change', toggleDurationInput);
+        toggleDiscountInput();
+        toggleDurationInput();
         const siteIds = ['etage', 'ascenseur', 'portage', 'acces', 'stationnement', 'parking_fees', 'engins', 'dechets', 'complexite'];
         siteIds.forEach(id => {
             const el = byId(id);
