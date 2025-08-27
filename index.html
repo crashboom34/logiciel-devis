@@ -562,9 +562,15 @@
                         <button id="btn-invoice" class="btn btn-ghost" type="button">Télécharger la facture</button>
                         <button id="btn-send" class="btn btn-primary" type="button">Envoyer & être rappelé</button>
                         <button id="btn-edit" class="btn btn-ghost" type="button">← Modifier</button>
+                        <button id="btn-archives" class="btn btn-ghost" type="button">Archives</button>
                     </div>
                     <p class="muted" style="margin-top:8px">En envoyant, vous acceptez d'être recontacté. Données stockées de façon sécurisée. Droit de rectification et suppression sur demande.</p>
                 </div>
+            </div>
+
+            <div id="archives" class="card" style="margin-top:12px;display:none">
+                <h2 style="margin-top:0">Archives</h2>
+                <ul id="archive-list"></ul>
             </div>
             
             <div class="card" aria-live="polite" aria-atomic="true">
@@ -1377,7 +1383,30 @@
             addTextBlock("Mention légale : 50% d'acompte à la commande, solde à la livraison.");
             addTextBlock('SRT légales : TVA applicable, RC Pro, coordonnées disponibles sur demande.');
 
+            const dataUrl = doc.output('dataurlstring');
+            saveArchive(kind, dataUrl);
             doc.save(`${kind}.pdf`);
+        }
+
+        function saveArchive(kind, dataUrl) {
+            const archives = JSON.parse(localStorage.getItem('archives') || '[]');
+            archives.push({ kind, dataUrl, date: new Date().toISOString() });
+            localStorage.setItem('archives', JSON.stringify(archives));
+        }
+
+        function renderArchives() {
+            const list = byId('archive-list');
+            list.innerHTML = '';
+            const archives = JSON.parse(localStorage.getItem('archives') || '[]');
+            archives.forEach((a, i) => {
+                const li = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = a.dataUrl;
+                link.download = `${a.kind}-${i + 1}.pdf`;
+                link.textContent = `${a.kind.toUpperCase()} - ${new Date(a.date).toLocaleString()}`;
+                li.appendChild(link);
+                list.appendChild(li);
+            });
         }
 
         const btnPdf = byId('btn-pdf');
@@ -1388,6 +1417,20 @@
         const btnInvoice = byId('btn-invoice');
         if (btnInvoice) {
             btnInvoice.addEventListener('click', () => generatePdf('facture'));
+        }
+
+        const btnArchives = byId('btn-archives');
+        if (btnArchives) {
+            btnArchives.addEventListener('click', function () {
+                const arch = byId('archives');
+                if (arch.style.display === 'none') {
+                    renderArchives();
+                    arch.style.display = 'block';
+                    arch.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    arch.style.display = 'none';
+                }
+            });
         }
 
         const btnCompany = byId('btn-company');
