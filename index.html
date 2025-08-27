@@ -1,1000 +1,1605 @@
-diff --git a/README.md b/README.md
-index 6aad243e3021326a8f84ad80d8968d29228e8302..fd0ada8c4e85bc3093044421cd8e65831056617f 100644
---- a/README.md
-+++ b/README.md
-@@ -1 +1,7 @@
--# logiciel-devis
-\ No newline at end of file
-+# logiciel-devis
-+
-+## Features
-+- Multi-step form with progress bar and light/dark theme toggle
-+- City auto-completion powered by api-adresse.data.gouv.fr
-+- Automatic 5% discount for estimates above €10,000
-+- PDF export with logo placeholder, provisional stamp and signature line
-diff --git a/index.html b/index.html
-index 3819c2b91bfd8b25d873a597e4178196c2129ae2..7ed1d78e251adecf46bfd35f498567bbcfb08071 100644
---- a/index.html
-+++ b/index.html
-@@ -1,118 +1,147 @@
- <!doctype html>
- <html lang="fr">
- <head>
-     <meta charset="utf-8"/>
-     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-     <title>Devis intelligent</title>
-     <link rel="preconnect" href="https://fonts.googleapis.com">
-     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-     <style>
--        :root {
--            --bg: #0b1220;
--            --fg: #e5e7eb;
--            --muted: #94a3b8;
--            --card: #0f172a;
--            --line: #1f2937;
--            --accent: #22c55e;
--            --danger: #ef4444;
--        }
-+        :root {
-+            --bg: #0b1220;
-+            --bg-grad: #1a2333;
-+            --fg: #f1f5f9;
-+            --muted: #9ca3af;
-+            --card: #0f172a;
-+            --line: #1f2937;
-+            --accent: #22c55e;
-+            --danger: #ef4444;
-+        }
-+
-+        html[data-theme='light'] {
-+            --bg: #f9fafb;
-+            --bg-grad: #f3f4f6;
-+            --fg: #111827;
-+            --muted: #374151;
-+            --card: #ffffff;
-+            --line: #d1d5db;
-+            --accent: #16a34a;
-+            --danger: #dc2626;
-+        }
-         
-         * {
-             box-sizing: border-box;
-         }
-         
-         html, body {
-             height: 100%;
-         }
-         
-         body {
-             margin: 0;
-             font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
--            background: radial-gradient(circle at 25% 25%, #1e293b, var(--bg));
-+            background: radial-gradient(circle at 25% 25%, var(--bg-grad), var(--bg));
-             color: var(--fg);
-             line-height: 1.6;
-         }
-         
--        a {
--            color: var(--accent);
--        }
-+        a {
-+            color: var(--accent);
-+        }
-+
-+        #progress-container {
-+            position: fixed;
-+            top: 0;
-+            left: 0;
-+            width: 100%;
-+            height: 4px;
-+            background: var(--line);
-+            z-index: 1000;
-+        }
-+
-+        #progress-bar {
-+            height: 100%;
-+            width: 0;
-+            background: var(--accent);
-+            transition: width 0.3s ease;
-+        }
-         
-         .container {
-             max-width: 1200px;
-             margin: 24px auto;
-             padding: 0 16px;
-         }
-         
-         header {
-             display: flex;
-             align-items: center;
-             gap: 14px;
-             margin-bottom: 14px;
-         }
-         
-         .logo {
-             width: 44px;
-             height: 44px;
-             border-radius: 12px;
-             display: grid;
-             place-items: center;
-             background: linear-gradient(135deg, #16a34a, #22c55e);
-             font-weight: 800;
-             color: #001b0a;
-         }
-         
-         h1 {
-             font-size: 22px;
-             margin: 0;
-         }
-         
-         .sub {
-             color: var(--muted);
-             font-size: 13px;
-             margin-top: 2px;
-         }
-         
-         .layout {
-             display: grid;
-             grid-template-columns: 1.2fr 0.8fr;
-             gap: 16px;
-         }
-         
-         @media (max-width: 980px) {
-             .layout {
-                 grid-template-columns: 1fr;
-             }
-         }
-         
-         .card {
--            background: rgba(15, 23, 42, 0.75);
-+            background: var(--card);
-             backdrop-filter: blur(8px);
--            border: 1px solid rgba(255, 255, 255, 0.05);
-+            border: 1px solid var(--line);
-             border-radius: 16px;
-             padding: 16px;
-             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-             transition: transform 0.3s ease, box-shadow 0.3s ease;
-         }
- 
-         .card:hover {
-             transform: translateY(-2px);
-             box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-         }
-         
-         .stepper {
-             display: flex;
-             gap: 8px;
-             flex-wrap: wrap;
-             margin-bottom: 12px;
-         }
-         
-         .step {
-             padding: 8px 10px;
-             border: 1px solid var(--line);
-             border-radius: 12px;
-             font-size: 13px;
-             color: var(--muted);
-             cursor: pointer;
-@@ -138,61 +167,61 @@
-         
-         .row3 {
-             display: grid;
-             grid-template-columns: 1fr 1fr 1fr;
-             gap: 12px;
-         }
-         
-         @media (max-width: 720px) {
-             .row, .row3 {
-                 grid-template-columns: 1fr;
-             }
-         }
-         
-         label {
-             font-weight: 600;
-             font-size: 13px;
-             margin-bottom: 6px;
-             display: block;
-         }
-         
-         input, select, button, textarea {
-             width: 100%;
-             padding: 12px;
-             border-radius: 12px;
-             border: 1px solid var(--line);
--            background: #0b1220;
-+            background: var(--card);
-             color: var(--fg);
-             font-size: 14px;
-             transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-         }
- 
-         input:focus, select:focus, textarea:focus {
-             outline: none;
-             border-color: var(--accent);
-             box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
--            background: #111827;
-+            background: var(--bg);
-         }
-         
-         input[type="checkbox"], input[type="radio"] {
-             width: auto;
-         }
-         
-         .btn {
-             cursor: pointer;
-             font-weight: 800;
-             letter-spacing: 0.2px;
-             transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-             border-radius: 8px;
-             padding: 8px 14px;
-         }
-         
-         .btn-primary {
-             background: linear-gradient(135deg, #16a34a, #22c55e);
-             color: #001b0a;
-             border: 0;
-             box-shadow: 0 2px 6px rgba(34, 197, 94, 0.4);
-         }
- 
-         .btn-primary:hover {
-             box-shadow: 0 4px 12px rgba(34, 197, 94, 0.6);
-             transform: translateY(-1px);
-@@ -313,91 +342,95 @@
-         }
- 
-         #recap {
-             line-height: 1.6;
-             font-size: 15px;
-         }
- 
-         #recap h3 {
-             margin-top: 20px;
-             font-size: 16px;
-             border-bottom: 1px solid var(--line);
-             padding-bottom: 4px;
-         }
- 
-         #recap ul {
-             margin: 6px 0 12px 16px;
-             padding: 0;
-         }
- 
-         #recap li {
-             margin-bottom: 4px;
-         }
-     </style>
- </head>
- <body>
--    <div class="container">
-+    <div id="progress-container"><div id="progress-bar"></div></div>
-+    <div class="container">
-         <header>
-             <div class="logo" id="company-logo">BM</div>
-             <div>
-                 <h1>Devis intelligent — <span id="company-title">SARL BRUNO MIRA</span></h1>
--                <div class="sub">Formulaire multi‑étapes · Tarification automatique par accès chantier, métiers et tâches · PDF & capture de lead</div>
--                <button id="btn-company" class="btn btn-ghost" type="button" style="margin-top:8px">Infos entreprise</button>
-+                <div class="sub">Formulaire multi‑étapes · Tarification automatique par accès chantier, métiers et tâches · PDF &amp; capture de lead</div>
-+                <div class="actions" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-+                    <button id="btn-company" class="btn btn-ghost" type="button">Infos entreprise</button>
-+                    <button id="theme-toggle" class="btn btn-ghost" type="button">Mode clair</button>
-+                </div>
-             </div>
-         </header>
--        
-         <div class="layout">
-             <div>
-                 <div id="company-settings" class="card" style="margin-bottom:12px;display:none">
-                     <h2 style="margin-top:0">Informations entreprise</h2>
-                     <div class="row3">
-                         <div><label>Nom</label><input id="c-name"/></div>
-                         <div><label>Email</label><input id="c-email" type="email"/></div>
-                         <div><label>Téléphone</label><input id="c-phone"/></div>
-                     </div>
-                     <div class="row3" style="margin-top:10px">
-                         <div><label>Adresse</label><input id="c-address"/></div>
-                         <div><label>SIREN</label><input id="c-siren"/></div>
-                         <div><label>SIRET</label><input id="c-siret"/></div>
-                     </div>
-                     <div class="row3" style="margin-top:10px">
-                         <div><label>RCS</label><input id="c-rcs"/></div>
-                         <div><label>TVA</label><input id="c-tva"/></div>
-                         <div><label>Assurance</label><input id="c-assurance"/></div>
-                     </div>
-                     <div style="margin-top:10px;text-align:right">
-                         <button id="btn-save-company" class="btn btn-primary" type="button">Enregistrer</button>
-                     </div>
-                 </div>
-                 <div class="stepper" id="stepper"></div>
-                 
-                 <div id="step-1" class="card">
-                     <h2 style="margin-top:0">1) Infos chantier</h2>
-                     <div class="row">
-                         <div>
-                             <label>Adresse (ville)</label>
--                            <input id="ville" placeholder="Montpellier, Béziers, Sète…"/>
-+                            <input id="ville" list="ville-list" placeholder="Montpellier, Béziers, Sète…"/>
-+                            <datalist id="ville-list"></datalist>
-                         </div>
-                         <div>
-                             <label>Date souhaitée</label>
-                             <input id="date" type="date"/>
-                         </div>
-                     </div>
-                     
-                     <div class="row3" style="margin-top:10px">
-                         <div>
-                             <label>Étage</label>
-                             <input id="etage" type="number" min="0" value="0"/>
-                             <div class="muted">0 = RDC</div>
-                         </div>
-                         <div>
-                             <label>Ascenseur</label>
-                             <select id="ascenseur">
-                                 <option>Oui</option>
-                                 <option>Non</option>
-                             </select>
-                         </div>
-                         <div>
-                             <label>Portage depuis stationnement (m)</label>
-                             <input id="portage" type="number" min="0" value="10"/>
-                         </div>
-                     </div>
-@@ -429,63 +462,63 @@
-                     <div class="row3" style="margin-top:10px">
-                         <div>
-                             <label>Accès engins (camion, mini‑pelle, benne)</label>
-                             <select id="engins">
-                                 <option value="ok">Possible</option>
-                                 <option value="limité">Limité</option>
-                                 <option value="impossible">Impossible</option>
-                             </select>
-                         </div>
-                         <div>
-                             <label>Déchets à évacuer (m³)</label>
-                             <input id="dechets" type="number" min="0" value="0"/>
-                         </div>
-                         <div>
-                             <label>Complexité coordination</label>
-                             <select id="complexite">
-                                 <option value="basse">Basse</option>
-                                 <option value="moyenne" selected>Moyenne</option>
-                                 <option value="haute">Haute</option>
-                             </select>
-                         </div>
-                     </div>
-                 </div>
-                 
-                 <div id="step-2" class="card" style="margin-top:12px">
--                    <h2 style="margin-top:0">2) Métiers & tâches</h2>
-+                    <h2 style="margin-top:0">2) Métiers &amp; tâches</h2>
-                     <div class="grid-gap">
-                         <div id="tasks"></div>
-                         <div class="row">
-                             <button id="add-task" class="btn btn-ghost" type="button">+ Ajouter une tâche</button>
-                             <button id="add-manual-task" class="btn btn-ghost" type="button">+ Tâche libre</button>
-                         </div>
-                         <div class="muted">Sélectionnez un métier puis une tâche, ou ajoutez une tâche libre, puis indiquez la quantité.</div>
-                     </div>
-                 </div>
-                 
-                 <div id="step-3" class="card" style="margin-top:12px">
--                    <h2 style="margin-top:0">3) Options & TVA</h2>
-+                    <h2 style="margin-top:0">3) Options &amp; TVA</h2>
-                     <div class="row3">
-                         <div>
-                             <label>Urgence</label>
-                             <select id="urgence">
-                                 <option value="non">Non</option>
-                                 <option value="oui">Oui (+10%)</option>
-                             </select>
-                         </div>
-                         <div>
-                             <label>Week‑end</label>
-                             <select id="weekend">
-                                 <option value="non">Non</option>
-                                 <option value="oui">Oui (+25%)</option>
-                             </select>
-                     </div>
-                     <div>
-                         <label>Travail de nuit</label>
-                         <select id="nuit">
-                             <option value="non">Non</option>
-                             <option value="oui">Oui (+20%)</option>
-                         </select>
-                     </div>
-                 </div>
- 
-                 <div style="margin-top:10px">
-@@ -532,115 +565,121 @@
-                         </div>
-                         <div>
-                             <label>Email</label>
-                             <input id="email" type="email" placeholder="vous@email.fr"/>
-                         </div>
-                         <div>
-                             <label>Téléphone</label>
-                             <input id="phone" type="tel" placeholder="06 12 34 56 78"/>
-                         </div>
-                     </div>
-                     
-                     <div style="margin-top:10px">
-                         <label>Commentaire</label>
-                         <textarea id="comment" rows="3" placeholder="Infos complémentaires, photos (lien), contraintes spécifiques…"></textarea>
-                     </div>
-                     
-                     <div class="hr"></div>
-                     
-                     <div style="display:flex;gap:10px;flex-wrap:wrap">
-                         <button id="btn-prev" class="btn btn-ghost" type="button">← Précédent</button>
-                         <button id="btn-next" class="btn btn-primary" type="button">Voir le récapitulatif →</button>
-                     </div>
-                 </div>
-                 
-                 <div id="step-5" class="card" style="margin-top:12px;display:none">
--                    <h2 style="margin-top:0">5) Récapitulatif & envoi</h2>
-+                    <h2 style="margin-top:0">5) Récapitulatif &amp; envoi</h2>
-                     <div id="recap"></div>
-                     <div class="hr"></div>
-                     <div style="display:flex;gap:10px;flex-wrap:wrap">
-                         <button id="btn-pdf" class="btn btn-ghost" type="button">Télécharger le devis</button>
-                         <button id="btn-invoice" class="btn btn-ghost" type="button">Télécharger la facture</button>
--                        <button id="btn-send" class="btn btn-primary" type="button">Envoyer & être rappelé</button>
-+                        <button id="btn-send" class="btn btn-primary" type="button">Envoyer &amp; être rappelé</button>
-                         <button id="btn-edit" class="btn btn-ghost" type="button">← Modifier</button>
-                         <button id="btn-archives" class="btn btn-ghost" type="button">Archives</button>
-                     </div>
-                     <p class="muted" style="margin-top:8px">En envoyant, vous acceptez d'être recontacté. Données stockées de façon sécurisée. Droit de rectification et suppression sur demande.</p>
-                 </div>
-             </div>
- 
-             <div id="archives" class="card" style="margin-top:12px;display:none">
-                 <h2 style="margin-top:0">Archives</h2>
-                 <ul id="archive-list"></ul>
-             </div>
-             
-             <div class="card" aria-live="polite" aria-atomic="true">
-                 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-                     <h2 style="margin:0">Estimation en temps réel</h2>
-                     <span class="badge" id="count-tasks">0 tâche</span>
-                 </div>
-                 
-                 <div class="row" style="margin-top:8px">
-                     <div>
-                         <div class="muted">Total estimatif HT</div>
-                         <div class="price" id="total-ht">—</div>
-                     </div>
-                     <div>
-                         <div class="muted">Total estimatif TTC</div>
-                         <div class="price" id="total-ttc">—</div>
-                     </div>
-                 </div>
- 
-                 <div class="muted" style="margin-top:8px">Durée estimée : <span id="duration">—</span></div>
- 
-                 <table style="margin-top:10px">
-                     <thead>
-                         <tr>
-                             <th>Détail</th>
-                             <th class="right">HT</th>
-                         </tr>
-                     </thead>
-                     <tbody id="rows"></tbody>
--                    <tfoot>
--                        <tr>
--                            <td class="total">Total HT</td>
--                            <td class="right total" id="f-total-ht">—</td>
--                        </tr>
--                        <tr>
--                            <td>TVA <span id="tva-rate">—</span></td>
--                            <td class="right" id="tva-amt">—</td>
--                        </tr>
-+                    <tfoot>
-+                        <tr>
-+                            <td class="total">Total HT</td>
-+                            <td class="right total" id="f-total-ht">—</td>
-+                        </tr>
-+                        <tr id="discount-row" style="display:none">
-+                            <td>Remise commerciale</td>
-+                            <td class="right" id="discount-amt"></td>
-+                        </tr>
-+                        <tr>
-+                            <td>TVA <span id="tva-rate">—</span></td>
-+                            <td class="right" id="tva-amt">—</td>
-+                        </tr>
-                         <tr>
-                             <td class="total">Total TTC</td>
-                             <td class="right total" id="f-total-ttc">—</td>
-                         </tr>
-                     </tfoot>
--                </table>
--                
--                <div class="alert" style="margin-top:12px">
--                    Estimation indicative. Visite technique et devis signé nécessaires pour valider prix, quantités et délais. TVA réduite sous conditions.
--                </div>
-+                </table>
-+
-+                <div id="messages" class="alert" style="display:none;margin-top:12px"></div>
-+
-+                <div class="alert" style="margin-top:12px">
-+                    Estimation indicative. Visite technique et devis signé nécessaires pour valider prix, quantités et délais. TVA réduite sous conditions.
-+                </div>
-                 
-                 <div class="muted" style="margin-top:10px" id="company-legal"></div>
-             </div>
-         </div>
-     </div>
- 
-     <script>
-         document.addEventListener('DOMContentLoaded', function () {
-         // Informations entreprise
-         const DEFAULT_COMPANY = {
-             name: 'SARL BRUNO MIRA',
-             address: '34980 Combaillaux',
-             phone: '04 xx xx xx xx',
-             email: 'contact@exemple.fr',
-             siren: '000 000 000',
-             siret: '123 456 789 00010',
-             rcs: 'XXX',
-             tva: 'FRXX',
-             insurance: 'RC & décennale n° XXXXX'
-         };
-         let company = { ...DEFAULT_COMPANY, ...JSON.parse(localStorage.getItem('company') || '{}') };
- 
-         // Configuration
-         const CATALOG = {
-             "Maçonnerie": [
-@@ -1074,194 +1113,249 @@
-                                 trade: trade,
-                                 taskId: taskId,
-                                 label: taskOption.textContent,
-                                 unit: taskOption.dataset.unit,
-                                 rate: parseFloat(taskOption.dataset.rate),
-                                 min: parseFloat(taskOption.dataset.min),
-                                 hours: parseFloat(taskOption.dataset.hours),
-                                 qty: qty,
-                                 tva55: taskOption.dataset.tva55 === '1',
-                                 detail: detail
-                             });
-                         }
-                     }
-                 }
-             });
- 
-             return result;
-         }
- 
-         // Fonction de calcul des prix
-         async function updatePricing() {
-             const tasks = readTasks();
-             let tasksTotal = 0;
-             let totalHours = 0;
-             const rows = [];
-+            const tradeTotals = {};
-+            const messages = [];
- 
-             // Taux de majoration appliqué aux tâches en fonction des options
-             let optionRate = 0;
-             if (byId('urgence').value === 'oui') optionRate += 0.10;
-             if (byId('weekend').value === 'oui') optionRate += 0.25;
-             if (byId('nuit').value === 'oui') optionRate += 0.20;
-             const pack = byId('pack').value;
-             if (pack === 'confort') optionRate += 0.12;
-             else if (pack === 'premium') optionRate += 0.25;
- 
-             // Calcul du prix des tâches avec majoration éventuelle
-             tasks.forEach(task => {
-                 let price = 0;
- 
-                 switch (task.unit) {
-                     case 'm²':
-                     case 'ml':
-                     case 'u':
-                         price = task.rate * task.qty;
-                         break;
-                     case 'forfait':
-                         price = task.rate * task.qty;
-                         break;
-                 }
- 
-                 // Appliquer le minimum
-                 if (task.min) {
-                     price = Math.max(price, task.min);
-                 }
- 
-+                // Marge automatique
-+                const marginRate = task.hours > 0 ? 0.30 : 0.15;
-+                price *= (1 + marginRate);
-+
-                 // Répartir les options sur les tâches
-                 price *= (1 + optionRate);
- 
-                 const hours = task.hours * task.qty;
-                 totalHours += hours;
-                 tasksTotal += price;
--                rows.push({ description: `${task.trade} — ${task.label}${task.detail ? ' — ' + task.detail : ''}`, qty: task.qty, unit: task.unit, price });
-+                rows.push({ trade: task.trade, description: `${task.trade} — ${task.label}${task.detail ? ' — ' + task.detail : ''}`, qty: task.qty, unit: task.unit, price });
-             });
- 
-             const baseTotal = tasksTotal;
-             let siteRate = 0;
-             let siteFixed = 0;
-             const floor = parseInt(byId('etage').value) || 0;
-             if (byId('ascenseur').value === 'Non') siteFixed += floor * FLOOR_COST_NO_ELEVATOR;
-             siteFixed += (parseFloat(byId('portage').value) || 0) * PORTAGE_COST_PER_M;
-             switch (byId('acces').value) {
-                 case 'difficile': siteRate += 0.05; break;
-             }
-             switch (byId('stationnement').value) {
-                 case 'moyen': siteRate += 0.02; break;
-                 case 'difficile': siteRate += 0.05; break;
-             }
-             siteFixed += parseFloat(byId('parking_fees').value) || 0;
-             switch (byId('engins').value) {
--                case 'limité': siteRate += 0.03; break;
--                case 'impossible': siteRate += 0.07; break;
-+                case 'limité':
-+                    siteRate += 0.03;
-+                    messages.push('Attention, accès engins limité : +3 %');
-+                    break;
-+                case 'impossible':
-+                    siteRate += 0.07;
-+                    messages.push('Attention, engins non accessibles : +7 %');
-+                    break;
-             }
-             siteFixed += (parseFloat(byId('dechets').value) || 0) * WASTE_COST_PER_M3;
-             switch (byId('complexite').value) {
-                 case 'moyenne': siteRate += 0.05; break;
-                 case 'haute': siteRate += 0.10; break;
-             }
-             const siteExtra = siteFixed + baseTotal * siteRate;
-             if (siteExtra > 0 && baseTotal > 0) {
-                 rows.forEach(row => {
-                     const share = (row.price / baseTotal) * siteExtra;
-                     row.price += share;
-                 });
-                 tasksTotal += siteExtra;
-             }
- 
-             // Durée estimée du chantier
-             let workDays = totalHours / 7;
-             const speed = byId('speed') ? byId('speed').value : 'normal';
-             const speedFactor = speed === 'rapide' ? 0.8 : speed === 'lent' ? 1.2 : 1;
-             workDays *= speedFactor;
-             const days = totalHours > 0 ? Math.ceil(workDays) : 0;
- 
-             // Coût des trajets basé sur la durée réelle
-             const distance = await getDistanceFromCity(byId('ville').value);
-             const travelCost = distance * 2 * workDays * FUEL_COST_PER_KM;
-             if (travelCost > 0 && tasksTotal > 0) {
-                 rows.forEach(row => {
-                     const share = (row.price / tasksTotal) * travelCost;
-                     row.price += share;
-                 });
-                 tasksTotal += travelCost;
-             }
- 
-+            rows.forEach(r => {
-+                tradeTotals[r.trade] = (tradeTotals[r.trade] || 0) + r.price;
-+            });
-+
-             let totalHT = tasksTotal;
- 
-+            // Remise commerciale automatique
-+            const remiseThreshold = 10000;
-+            const remiseRate = totalHT > remiseThreshold ? 0.05 : 0;
-+            let remiseAmount = 0;
-+            if (remiseRate > 0) {
-+                remiseAmount = totalHT * remiseRate;
-+                totalHT -= remiseAmount;
-+                byId('discount-row').style.display = '';
-+                byId('discount-amt').textContent = '-' + formatEUR(remiseAmount);
-+            } else {
-+                byId('discount-row').style.display = 'none';
-+            }
-+
-             // TVA
-             const tvaMode = byId('tva_mode').value;
-             const logement2ans = byId('logement_2ans').checked;
-             let tvaRate;
- 
-             if (tvaMode === 'auto') {
-                 const all55 = tasks.length > 0 && tasks.every(t => t.tva55);
-                 if (all55) {
-                     tvaRate = 0.055;
-                 } else if (logement2ans) {
-                     tvaRate = 0.10;
-                 } else {
-                     tvaRate = 0.20;
-                 }
-             } else {
-                 tvaRate = parseFloat(tvaMode) / 100;
-             }
- 
-             const tvaAmount = totalHT * tvaRate;
-             const totalTTC = totalHT + tvaAmount;
- 
-             pdfRows = rows.map(r => ({
-                 description: r.description,
-                 qty: r.qty,
-                 unitPrice: r.price / (r.qty || 1),
-                 total: r.price
-             }));
-+            Object.entries(tradeTotals).forEach(([trade, sum]) => {
-+                pdfRows.push({ description: `Sous-total ${trade}`, qty: '', unitPrice: '', total: sum });
-+            });
- 
-             // Mise à jour de l'affichage
-             byId('total-ht').textContent = formatEUR(totalHT);
-             byId('total-ttc').textContent = formatEUR(totalTTC);
-             byId('f-total-ht').textContent = formatEUR(totalHT);
-             byId('f-total-ttc').textContent = formatEUR(totalTTC);
-             byId('tva-rate').textContent = `${(tvaRate * 100).toFixed(1).replace(/\.0$/, '')}%`;
-             byId('tva-amt').textContent = formatEUR(tvaAmount);
-             byId('count-tasks').textContent = `${tasks.length} ${tasks.length > 1 ? 'tâches' : 'tâche'}`;
-             byId('duration').textContent = days > 0 ? `${days} ${days > 1 ? 'jours' : 'jour'}` : '—';
- 
-             // Mise à jour du tableau détaillé
-             const rowsContainer = byId('rows');
-             rowsContainer.innerHTML = '';
- 
-             rows.forEach(row => {
-                 const tr = document.createElement('tr');
-                 const td1 = document.createElement('td');
-                 td1.textContent = `${row.description} (${row.qty} ${row.unit})`;
-                 const td2 = document.createElement('td');
-                 td2.className = 'right';
-                 td2.textContent = formatEUR(row.price);
-                 tr.appendChild(td1);
-                 tr.appendChild(td2);
-                 rowsContainer.appendChild(tr);
-             });
-+            Object.entries(tradeTotals).forEach(([trade, sum]) => {
-+                const tr = document.createElement('tr');
-+                tr.className = 'subtotal';
-+                const td1 = document.createElement('td');
-+                td1.className = 'total';
-+                td1.textContent = `Sous-total ${trade}`;
-+                const td2 = document.createElement('td');
-+                td2.className = 'right total';
-+                td2.textContent = formatEUR(sum);
-+                tr.appendChild(td1);
-+                tr.appendChild(td2);
-+                rowsContainer.appendChild(tr);
-+            });
-+
-+            const msgEl = byId('messages');
-+            if (msgEl) {
-+                if (messages.length) {
-+                    msgEl.innerHTML = messages.join('<br>');
-+                    msgEl.style.display = '';
-+                } else {
-+                    msgEl.style.display = 'none';
-+                }
-+            }
-         }
- 
-         // Initialisation
-         byId('add-task').addEventListener('click', addTaskRow);
-         byId('add-manual-task').addEventListener('click', addManualTaskRow);
-         const optionIds = ['urgence', 'weekend', 'nuit', 'speed', 'pack', 'tva_mode'];
-         optionIds.forEach(id => {
-             const el = byId(id);
-             if (el) el.addEventListener('change', updatePricing);
-         });
-         const siteIds = ['etage', 'ascenseur', 'portage', 'acces', 'stationnement', 'parking_fees', 'engins', 'dechets', 'complexite'];
-         siteIds.forEach(id => {
-             const el = byId(id);
-             if (el) {
-                 el.addEventListener('change', updatePricing);
-                 el.addEventListener('input', updatePricing);
-             }
-         });
-         const logement2ansEl = byId('logement_2ans');
-         if (logement2ansEl) logement2ansEl.addEventListener('change', updatePricing);
-         const villeEl = byId('ville');
-         if (villeEl) villeEl.addEventListener('input', updatePricing);
-         addTaskRow();
- 
-         // Génération du récapitulatif
-@@ -1288,56 +1382,64 @@
-         // Navigation vers le récapitulatif
-         const btnNext = byId('btn-next');
-         if (btnNext) {
-             btnNext.addEventListener('click', async function () {
-                 await updatePricing();
-                 buildRecap();
-                 const step5 = byId('step-5');
-                 step5.style.display = 'block';
-                 step5.scrollIntoView({ behavior: 'smooth' });
-             });
-         }
-         const btnEdit = byId('btn-edit');
-         if (btnEdit) {
-             btnEdit.addEventListener('click', function () {
-                 byId('step-5').style.display = 'none';
-                 byId('step-4').scrollIntoView({ behavior: 'smooth' });
-             });
-         }
- 
-         async function generatePdf(kind) {
-             await updatePricing();
-             buildRecap();
-             const { jsPDF } = window.jspdf;
-             const doc = new jsPDF();
- 
-+            doc.setFontSize(16);
-+            doc.text(byId('company-logo').textContent || 'LOGO', 14, 20);
-+            if (kind === 'devis') {
-+                doc.setFontSize(12);
-+                doc.setTextColor(220, 38, 38);
-+                doc.text('DEVIS PROVISOIRE', 150, 20);
-+                doc.setTextColor(0, 0, 0);
-+            }
-             doc.setFont('helvetica', 'bold');
-             doc.setFontSize(18);
-             const title = kind === 'facture' ? 'FACTURE' : 'DEVIS';
--            doc.text(title, 105, 20, { align: 'center' });
-+            doc.text(title, 105, 30, { align: 'center' });
- 
--            let y = 30;
-+            let y = 40;
-             doc.setFontSize(12);
-             doc.text('Informations Entreprise', 14, y);
-             y += 6;
-             doc.setFont('helvetica', 'normal');
-             doc.text(`Entreprise : ${company.name}`, 14, y); y += 6;
-             doc.text(`Adresse : ${company.address}`, 14, y); y += 6;
-             doc.text(`Téléphone : ${company.phone}`, 14, y); y += 6;
-             doc.text(`Email : ${company.email}`, 14, y); y += 6;
-             doc.text(`SIREN : ${company.siren}`, 14, y); y += 6;
-             doc.text(`SIRET : ${company.siret}`, 14, y); y += 6;
-             doc.text(`RCS : ${company.rcs}`, 14, y); y += 6;
-             doc.text(`TVA : ${company.tva}`, 14, y); y += 6;
-             doc.text(`Assurance décennale : ${company.insurance}`, 14, y); y += 10;
- 
-             doc.setFont('helvetica', 'bold');
-             doc.text('Informations Client', 14, y);
-             y += 6;
-             doc.setFont('helvetica', 'normal');
-             doc.text(`Nom : ${byId('name').value}`, 14, y); y += 6;
-             doc.text(`Adresse : ${byId('ville').value}`, 14, y); y += 6;
-             doc.text(`Téléphone : ${byId('phone').value}`, 14, y); y += 10;
- 
-             const label = kind === 'facture' ? 'Facture' : 'Devis';
-             doc.setFont('helvetica', 'bold');
-             doc.text(`Détails ${kind === 'facture' ? 'de la' : 'du'} ${label}`, 14, y);
-@@ -1361,50 +1463,54 @@
-             doc.text(`Sous-total HT : ${byId('f-total-ht').textContent}`, 196, y, { align: 'right' });
-             doc.text(`TVA (${byId('tva-rate').textContent}) : ${byId('tva-amt').textContent}`, 196, y + 7, { align: 'right' });
-             doc.setFont('helvetica', 'bold');
-             doc.setTextColor(220, 38, 38);
-             doc.text(`Total TTC : ${byId('f-total-ttc').textContent}`, 196, y + 14, { align: 'right' });
-             doc.setTextColor(0, 0, 0);
-             y += 26;
- 
-             doc.setFont('helvetica', 'normal');
-             doc.setFontSize(10);
- 
-             const addTextBlock = text => {
-                 const lines = doc.splitTextToSize(text, 182);
-                 doc.text(lines, 14, y);
-                 y += lines.length * 5;
-             };
- 
-             if (kind === 'devis') {
-                 addTextBlock('Durée de validité du devis : 30 jours');
-             }
-             addTextBlock("Prix indiqué : sous réserve d'évolution du coût des matériaux, ajusté à la commande, selon stock et la livraison.");
-             addTextBlock(`TVA applicable : ${byId('tva-rate').textContent}`);
-             addTextBlock("Mention légale : 50% d'acompte à la commande, solde à la livraison.");
-             addTextBlock('SRT légales : TVA applicable, RC Pro, coordonnées disponibles sur demande.');
- 
-+            addTextBlock('Signature :');
-+            doc.line(40, y, 120, y);
-+            y += 10;
-+
-             const dataUrl = doc.output('dataurlstring');
-             saveArchive(kind, dataUrl);
-             doc.save(`${kind}.pdf`);
-         }
- 
-         function saveArchive(kind, dataUrl) {
-             const archives = JSON.parse(localStorage.getItem('archives') || '[]');
-             archives.push({ kind, dataUrl, date: new Date().toISOString() });
-             localStorage.setItem('archives', JSON.stringify(archives));
-         }
- 
-         function renderArchives() {
-             const list = byId('archive-list');
-             list.innerHTML = '';
-             const archives = JSON.parse(localStorage.getItem('archives') || '[]');
-             archives.forEach((a, i) => {
-                 const li = document.createElement('li');
-                 const link = document.createElement('a');
-                 link.href = a.dataUrl;
-                 link.download = `${a.kind}-${i + 1}.pdf`;
-                 link.textContent = `${a.kind.toUpperCase()} - ${new Date(a.date).toLocaleString()}`;
-                 li.appendChild(link);
-                 list.appendChild(li);
-             });
-         }
-@@ -1426,30 +1532,74 @@
-                 if (arch.style.display === 'none') {
-                     renderArchives();
-                     arch.style.display = 'block';
-                     arch.scrollIntoView({ behavior: 'smooth' });
-                 } else {
-                     arch.style.display = 'none';
-                 }
-             });
-         }
- 
-         const btnCompany = byId('btn-company');
-         if (btnCompany) {
-             btnCompany.addEventListener('click', function () {
-                 const cs = byId('company-settings');
-                 cs.style.display = cs.style.display === 'none' ? 'block' : 'none';
-             });
-         }
-         const btnSaveCompany = byId('btn-save-company');
-         if (btnSaveCompany) {
-             btnSaveCompany.addEventListener('click', function () {
-                 saveCompany();
-                 byId('company-settings').style.display = 'none';
-             });
-         }
- 
-+        const themeToggle = byId('theme-toggle');
-+        if (themeToggle) {
-+            const applyTheme = t => {
-+                document.documentElement.setAttribute('data-theme', t);
-+                themeToggle.textContent = t === 'dark' ? 'Mode clair' : 'Mode sombre';
-+            };
-+            applyTheme(localStorage.getItem('theme') || 'dark');
-+            themeToggle.addEventListener('click', () => {
-+                const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-+                localStorage.setItem('theme', current);
-+                applyTheme(current);
-+            });
-+        }
-+
-+        const villeInput = byId('ville');
-+        const villeList = byId('ville-list');
-+        if (villeInput) {
-+            let debounce;
-+            villeInput.addEventListener('input', function () {
-+                const q = this.value.trim();
-+                if (debounce) clearTimeout(debounce);
-+                if (q.length < 3) return;
-+                debounce = setTimeout(async () => {
-+                    try {
-+                        const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&type=municipality&limit=5`);
-+                        const data = await res.json();
-+                        villeList.innerHTML = data.features.map(f => `<option value="${f.properties.label}"></option>`).join('');
-+                    } catch (e) { }
-+                }, 300);
-+            });
-+        }
-+
-+        const stepsEls = [1,2,3,4,5].map(n => byId(`step-${n}`));
-+        const progressBarEl = byId('progress-bar');
-+        function updateProgressBar() {
-+            let current = 1;
-+            stepsEls.forEach((el, i) => {
-+                if (el.getBoundingClientRect().top <= 80) current = i + 1;
-+            });
-+            progressBarEl.style.width = (current / stepsEls.length) * 100 + '%';
-+        }
-+        document.addEventListener('scroll', updateProgressBar);
-+        updateProgressBar();
-+
-         renderCompany();
-         });
-     </script>
- </body>
- </html>
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Devis intelligent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --bg-grad: #1a2333;
+            --fg: #f1f5f9;
+            --muted: #9ca3af;
+            --card: #0f172a;
+            --line: #1f2937;
+            --accent: #22c55e;
+            --danger: #ef4444;
+        }
+
+        html[data-theme='light'] {
+            --bg: #f9fafb;
+            --bg-grad: #f3f4f6;
+            --fg: #111827;
+            --muted: #374151;
+            --card: #ffffff;
+            --line: #d1d5db;
+            --accent: #16a34a;
+            --danger: #dc2626;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            margin: 0;
+            font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+            background: radial-gradient(circle at 25% 25%, var(--bg-grad), var(--bg));
+            color: var(--fg);
+            line-height: 1.6;
+        }
+        
+        a {
+            color: var(--accent);
+        }
+
+        #progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--line);
+            z-index: 1000;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+        
+        header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        
+        .logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            font-weight: 800;
+            color: #001b0a;
+        }
+        
+        h1 {
+            font-size: 22px;
+            margin: 0;
+        }
+        
+        .sub {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 2px;
+        }
+        
+        .layout {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 16px;
+        }
+        
+        @media (max-width: 980px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--card);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+        }
+        
+        .stepper {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        
+        .step {
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            font-size: 13px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .step:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--fg);
+        }
+        
+        .step.active {
+            border-color: var(--accent);
+            color: #042d17;
+            background: rgba(34, 197, 94, 0.15);
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .row3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+        
+        @media (max-width: 720px) {
+            .row, .row3 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        label {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: block;
+        }
+        
+        input, select, button, textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: var(--card);
+            color: var(--fg);
+            font-size: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+            background: var(--bg);
+        }
+        
+        input[type="checkbox"], input[type="radio"] {
+            width: auto;
+        }
+        
+        .btn {
+            cursor: pointer;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+            transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            border-radius: 8px;
+            padding: 8px 14px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: #001b0a;
+            border: 0;
+            box-shadow: 0 2px 6px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.6);
+            transform: translateY(-1px);
+        }
+        
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--line);
+            color: var(--fg);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-1px);
+        }
+        
+        .muted {
+            color: var(--muted);
+            font-size: 12px;
+        }
+        
+        .badge {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            padding: 4px 8px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        
+        .price {
+            font-size: 28px;
+            font-weight: 800;
+        }
+        
+        .right {
+            text-align: right;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 10px;
+            border-bottom: 1px dashed var(--line);
+            font-size: 14px;
+        }
+        
+        th {
+            text-align: left;
+            color: var(--muted);
+        }
+        
+        .total {
+            font-weight: 800;
+        }
+        
+        .grid-gap {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .task-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1.2fr 0.6fr 0.6fr 1.2fr auto;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .task-row button {
+            width: auto;
+            padding: 8px 12px;
+        }
+
+        .task-row.manual {
+            grid-template-columns: 1.2fr 1.2fr 0.6fr 0.6fr 0.6fr 1.2fr auto;
+        }
+
+        @media (max-width: 600px) {
+            .task-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            .task-row .trade-select,
+            .task-row .task-select,
+            .task-row .detail-input,
+            .task-row button {
+                grid-column: span 2;
+            }
+        }
+
+        .pill {
+            padding: 4px 8px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+        
+        .hr {
+            height: 1px;
+            background: var(--line);
+            margin: 12px 0;
+        }
+        
+        .alert {
+            background: #0c1322;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+
+        #recap {
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        #recap h3 {
+            margin-top: 20px;
+            font-size: 16px;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 4px;
+        }
+
+        #recap ul {
+            margin: 6px 0 12px 16px;
+            padding: 0;
+        }
+
+        #recap li {
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <div class="container">
+        <header>
+            <div class="logo" id="company-logo">BM</div>
+            <div>
+                <h1>Devis intelligent — <span id="company-title">SARL BRUNO MIRA</span></h1>
+                <div class="sub">Formulaire multi‑étapes · Tarification automatique par accès chantier, métiers et tâches · PDF &amp; capture de lead</div>
+                <div class="actions" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                    <button id="btn-company" class="btn btn-ghost" type="button">Infos entreprise</button>
+                    <button id="theme-toggle" class="btn btn-ghost" type="button">Mode clair</button>
+                </div>
+            </div>
+        </header>
+        <div class="layout">
+            <div>
+                <div id="company-settings" class="card" style="margin-bottom:12px;display:none">
+                    <h2 style="margin-top:0">Informations entreprise</h2>
+                    <div class="row3">
+                        <div><label>Nom</label><input id="c-name"/></div>
+                        <div><label>Email</label><input id="c-email" type="email"/></div>
+                        <div><label>Téléphone</label><input id="c-phone"/></div>
+                    </div>
+                    <div class="row3" style="margin-top:10px">
+                        <div><label>Adresse</label><input id="c-address"/></div>
+                        <div><label>SIREN</label><input id="c-siren"/></div>
+                        <div><label>SIRET</label><input id="c-siret"/></div>
+                    </div>
+                    <div class="row3" style="margin-top:10px">
+                        <div><label>RCS</label><input id="c-rcs"/></div>
+                        <div><label>TVA</label><input id="c-tva"/></div>
+                        <div><label>Assurance</label><input id="c-assurance"/></div>
+                    </div>
+                    <div style="margin-top:10px;text-align:right">
+                        <button id="btn-save-company" class="btn btn-primary" type="button">Enregistrer</button>
+                    </div>
+                </div>
+                <div class="stepper" id="stepper"></div>
+                
+                <div id="step-1" class="card">
+                    <h2 style="margin-top:0">1) Infos chantier</h2>
+                    <div class="row">
+                        <div>
+                            <label>Adresse (ville)</label>
+                            <input id="ville" list="ville-list" placeholder="Montpellier, Béziers, Sète…"/>
+                            <datalist id="ville-list"></datalist>
+                        </div>
+                        <div>
+                            <label>Date souhaitée</label>
+                            <input id="date" type="date"/>
+                        </div>
+                    </div>
+                    
+                    <div class="row3" style="margin-top:10px">
+                        <div>
+                            <label>Étage</label>
+                            <input id="etage" type="number" min="0" value="0"/>
+                            <div class="muted">0 = RDC</div>
+                        </div>
+                        <div>
+                            <label>Ascenseur</label>
+                            <select id="ascenseur">
+                                <option>Oui</option>
+                                <option>Non</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Portage depuis stationnement (m)</label>
+                            <input id="portage" type="number" min="0" value="10"/>
+                        </div>
+                    </div>
+                    
+                    <div class="row3" style="margin-top:10px">
+                        <div>
+                            <label>Accès global</label>
+                            <select id="acces">
+                                <option value="simple">Simple</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="difficile">Difficile</option>
+                            </select>
+                            <div class="muted">Largeur/hauteur, couloirs, contraintes…</div>
+                        </div>
+                        <div>
+                            <label>Stationnement</label>
+                            <select id="stationnement">
+                                <option value="facile">Facile</option>
+                                <option value="moyen">Moyen</option>
+                                <option value="difficile">Difficile</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Frais de stationnement (€)</label>
+                            <input id="parking_fees" type="number" min="0" value="0"/>
+                        </div>
+                    </div>
+                    
+                    <div class="row3" style="margin-top:10px">
+                        <div>
+                            <label>Accès engins (camion, mini‑pelle, benne)</label>
+                            <select id="engins">
+                                <option value="ok">Possible</option>
+                                <option value="limité">Limité</option>
+                                <option value="impossible">Impossible</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Déchets à évacuer (m³)</label>
+                            <input id="dechets" type="number" min="0" value="0"/>
+                        </div>
+                        <div>
+                            <label>Complexité coordination</label>
+                            <select id="complexite">
+                                <option value="basse">Basse</option>
+                                <option value="moyenne" selected>Moyenne</option>
+                                <option value="haute">Haute</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="step-2" class="card" style="margin-top:12px">
+                    <h2 style="margin-top:0">2) Métiers &amp; tâches</h2>
+                    <div class="grid-gap">
+                        <div id="tasks"></div>
+                        <div class="row">
+                            <button id="add-task" class="btn btn-ghost" type="button">+ Ajouter une tâche</button>
+                            <button id="add-manual-task" class="btn btn-ghost" type="button">+ Tâche libre</button>
+                        </div>
+                        <div class="muted">Sélectionnez un métier puis une tâche, ou ajoutez une tâche libre, puis indiquez la quantité.</div>
+                    </div>
+                </div>
+                
+                <div id="step-3" class="card" style="margin-top:12px">
+                    <h2 style="margin-top:0">3) Options &amp; TVA</h2>
+                    <div class="row3">
+                        <div>
+                            <label>Urgence</label>
+                            <select id="urgence">
+                                <option value="non">Non</option>
+                                <option value="oui">Oui (+10%)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Week‑end</label>
+                            <select id="weekend">
+                                <option value="non">Non</option>
+                                <option value="oui">Oui (+25%)</option>
+                            </select>
+                    </div>
+                    <div>
+                        <label>Travail de nuit</label>
+                        <select id="nuit">
+                            <option value="non">Non</option>
+                            <option value="oui">Oui (+20%)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px">
+                    <label>Durée estimée</label>
+                    <select id="speed">
+                        <option value="rapide">Rapide</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="lent">Lent</option>
+                    </select>
+                </div>
+
+                <div class="row" style="margin-top:10px">
+                    <div>
+                        <label>Pack / Marge</label>
+                        <select id="pack">
+                                <option value="standard">Standard (x1.00)</option>
+                                <option value="confort">Confort (x1.12)</option>
+                                <option value="premium">Premium (x1.25)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>TVA automatique</label>
+                            <select id="tva_mode">
+                                <option value="auto">Auto (5,5 / 10 / 20)</option>
+                                <option value="5.5">Forcer 5,5%</option>
+                                <option value="10">Forcer 10%</option>
+                                <option value="20">Forcer 20%</option>
+                            </select>
+                            <div class="muted">Auto : 5,5% si uniquement tâches éligibles, sinon 10% si logement > 2 ans, sinon 20%.</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:10px">
+                        <label><input id="logement_2ans" type="checkbox" checked/> Logement achevé depuis plus de 2 ans</label>
+                    </div>
+                </div>
+                
+                <div id="step-4" class="card" style="margin-top:12px">
+                    <h2 style="margin-top:0">4) Coordonnées</h2>
+                    <div class="row3">
+                        <div>
+                            <label>Nom</label>
+                            <input id="name" placeholder="Nom Prénom"/>
+                        </div>
+                        <div>
+                            <label>Email</label>
+                            <input id="email" type="email" placeholder="vous@email.fr"/>
+                        </div>
+                        <div>
+                            <label>Téléphone</label>
+                            <input id="phone" type="tel" placeholder="06 12 34 56 78"/>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:10px">
+                        <label>Commentaire</label>
+                        <textarea id="comment" rows="3" placeholder="Infos complémentaires, photos (lien), contraintes spécifiques…"></textarea>
+                    </div>
+                    
+                    <div class="hr"></div>
+                    
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <button id="btn-prev" class="btn btn-ghost" type="button">← Précédent</button>
+                        <button id="btn-next" class="btn btn-primary" type="button">Voir le récapitulatif →</button>
+                    </div>
+                </div>
+                
+                <div id="step-5" class="card" style="margin-top:12px;display:none">
+                    <h2 style="margin-top:0">5) Récapitulatif &amp; envoi</h2>
+                    <div id="recap"></div>
+                    <div class="hr"></div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <button id="btn-pdf" class="btn btn-ghost" type="button">Télécharger le devis</button>
+                        <button id="btn-invoice" class="btn btn-ghost" type="button">Télécharger la facture</button>
+                        <button id="btn-send" class="btn btn-primary" type="button">Envoyer &amp; être rappelé</button>
+                        <button id="btn-edit" class="btn btn-ghost" type="button">← Modifier</button>
+                        <button id="btn-archives" class="btn btn-ghost" type="button">Archives</button>
+                    </div>
+                    <p class="muted" style="margin-top:8px">En envoyant, vous acceptez d'être recontacté. Données stockées de façon sécurisée. Droit de rectification et suppression sur demande.</p>
+                </div>
+            </div>
+
+            <div id="archives" class="card" style="margin-top:12px;display:none">
+                <h2 style="margin-top:0">Archives</h2>
+                <ul id="archive-list"></ul>
+            </div>
+            
+            <div class="card" aria-live="polite" aria-atomic="true">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                    <h2 style="margin:0">Estimation en temps réel</h2>
+                    <span class="badge" id="count-tasks">0 tâche</span>
+                </div>
+                
+                <div class="row" style="margin-top:8px">
+                    <div>
+                        <div class="muted">Total estimatif HT</div>
+                        <div class="price" id="total-ht">—</div>
+                    </div>
+                    <div>
+                        <div class="muted">Total estimatif TTC</div>
+                        <div class="price" id="total-ttc">—</div>
+                    </div>
+                </div>
+
+                <div class="muted" style="margin-top:8px">Durée estimée : <span id="duration">—</span></div>
+
+                <table style="margin-top:10px">
+                    <thead>
+                        <tr>
+                            <th>Détail</th>
+                            <th class="right">HT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rows"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="total">Total HT</td>
+                            <td class="right total" id="f-total-ht">—</td>
+                        </tr>
+                        <tr id="discount-row" style="display:none">
+                            <td>Remise commerciale</td>
+                            <td class="right" id="discount-amt"></td>
+                        </tr>
+                        <tr>
+                            <td>TVA <span id="tva-rate">—</span></td>
+                            <td class="right" id="tva-amt">—</td>
+                        </tr>
+                        <tr>
+                            <td class="total">Total TTC</td>
+                            <td class="right total" id="f-total-ttc">—</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div id="messages" class="alert" style="display:none;margin-top:12px"></div>
+
+                <div class="alert" style="margin-top:12px">
+                    Estimation indicative. Visite technique et devis signé nécessaires pour valider prix, quantités et délais. TVA réduite sous conditions.
+                </div>
+                
+                <div class="muted" style="margin-top:10px" id="company-legal"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        // Informations entreprise
+        const DEFAULT_COMPANY = {
+            name: 'SARL BRUNO MIRA',
+            address: '34980 Combaillaux',
+            phone: '04 xx xx xx xx',
+            email: 'contact@exemple.fr',
+            siren: '000 000 000',
+            siret: '123 456 789 00010',
+            rcs: 'XXX',
+            tva: 'FRXX',
+            insurance: 'RC & décennale n° XXXXX'
+        };
+        let company = { ...DEFAULT_COMPANY, ...JSON.parse(localStorage.getItem('company') || '{}') };
+
+        // Configuration
+        const CATALOG = {
+            "Maçonnerie": [
+                { id: 'dalle_beton', label: 'Dalle béton', unit: 'm²', rate: 95, min: 800, hours: 0.5 },
+                { id: 'ouverture_porteur', label: 'Ouverture mur porteur (IPN inclus)', unit: 'forfait', rate: 2800, min: 2800, hours: 35 },
+                { id: 'demolition_cloison', label: 'Démolition cloison', unit: 'm²', rate: 35, min: 300, hours: 0.15 },
+                { id: 'mur_agglo', label: 'Mur agglos 20', unit: 'm²', rate: 85, min: 600, hours: 0.6 },
+                { id: 'chape_liquide', label: 'Chape liquide', unit: 'm²', rate: 22, min: 400, hours: 0.1 },
+                { id: 'seuil_beton', label: 'Seuil béton', unit: 'ml', rate: 60, min: 240, hours: 0.4 },
+                { id: 'fondations_semelles', label: 'Fondations semelles filantes', unit: 'ml', rate: 120, min: 600, hours: 0.8 },
+                { id: 'muret_cloture', label: 'Muret de clôture', unit: 'ml', rate: 95, min: 500, hours: 0.6 },
+                { id: 'ragreage_sol', label: 'Ragréage sol', unit: 'm²', rate: 18, min: 250, hours: 0.1 }
+            ],
+            "Plomberie": [
+                { id: 'reseau_ecs', label: 'Réseau eau chaude/froide', unit: 'ml', rate: 42, min: 350, hours: 0.3 },
+                { id: 'sdb_pack', label: 'Salle de bains — pack (hors meubles)', unit: 'm²', rate: 280, min: 2500, hours: 0.8 },
+                { id: 'wc_suspendu', label: 'WC suspendu — pose', unit: 'forfait', rate: 420, min: 420, hours: 8 },
+                { id: 'chauffe_eau_200', label: 'Chauffe‑eau 200 L — pose', unit: 'forfait', rate: 380, min: 380, hours: 6 },
+                { id: 'evac_eu', label: 'Évacuation EU', unit: 'ml', rate: 30, min: 180, hours: 0.2 },
+                { id: 'receveur_douche', label: 'Receveur de douche — pose', unit: 'forfait', rate: 380, min: 380, hours: 7 },
+                { id: 'chaudiere_gaz', label: 'Chaudière gaz condensation — pose', unit: 'forfait', rate: 2500, min: 2500, hours: 30 },
+                { id: 'raccordement_evier', label: 'Raccordement évier cuisine', unit: 'forfait', rate: 180, min: 180, hours: 3 }
+            ],
+            "Électricité": [
+                { id: 'renov_t2', label: 'Rénovation électrique T2', unit: 'forfait', rate: 3200, min: 3200, hours: 40 },
+                { id: 'prise', label: 'Ajout prise', unit: 'u', rate: 55, min: 165, hours: 1 },
+                { id: 'spots', label: 'Spots encastrés', unit: 'u', rate: 65, min: 195, hours: 0.8 },
+                { id: 'tableau', label: 'Remplacement tableau', unit: 'forfait', rate: 450, min: 450, hours: 8 },
+                { id: 'point_lumineux', label: 'Point lumineux', unit: 'u', rate: 70, min: 140, hours: 0.5 },
+                { id: 'vmc_simple', label: 'VMC simple flux', unit: 'forfait', rate: 850, min: 850, hours: 16 },
+                { id: 'prise_exterieure', label: 'Prise extérieure étanche', unit: 'u', rate: 80, min: 160, hours: 0.8 },
+                { id: 'mise_terre', label: 'Mise à la terre complète', unit: 'forfait', rate: 650, min: 650, hours: 14 }
+            ],
+            "Carrelage": [
+                { id: 'sol_interieur', label: 'Carrelage sol intérieur', unit: 'm²', rate: 55, min: 500, hours: 0.3 },
+                { id: 'terrasse', label: 'Terrasse carrelée', unit: 'm²', rate: 75, min: 800, hours: 0.4 },
+                { id: 'credence', label: 'Crédence cuisine', unit: 'm²', rate: 85, min: 200, hours: 0.2 },
+                { id: 'faience', label: 'Faïence murale', unit: 'm²', rate: 45, min: 300, hours: 0.25 },
+                { id: 'plinthes_carrelage', label: 'Plinthes assorties', unit: 'ml', rate: 15, min: 120, hours: 0.05 },
+                { id: 'escalier_carrelage', label: 'Escalier carrelé', unit: 'u', rate: 110, min: 330, hours: 2 },
+                { id: 'pose_mosaique', label: 'Pose mosaïque', unit: 'm²', rate: 95, min: 200, hours: 0.3 }
+            ],
+            "Peinture": [
+                { id: 'murs_plafonds', label: 'Peinture murs & plafonds', unit: 'm²', rate: 14, min: 300, hours: 0.15 },
+                { id: 'boiseries_laque', label: 'Boiseries — laque', unit: 'm²', rate: 22, min: 220, hours: 0.2 },
+                { id: 'enduit_lissage', label: 'Enduit de lissage', unit: 'm²', rate: 12, min: 180, hours: 0.15 },
+                { id: 'peinture_facade', label: 'Peinture de façade', unit: 'm²', rate: 28, min: 600, hours: 0.25 },
+                { id: 'papier_peint', label: 'Pose papier peint', unit: 'm²', rate: 20, min: 200, hours: 0.2 },
+                { id: 'peinture_anti_humidite', label: 'Peinture anti-humidité', unit: 'm²', rate: 18, min: 180, hours: 0.18 }
+            ],
+            "Menuiserie": [
+                { id: 'porte_interieure', label: 'Porte intérieure — pose', unit: 'u', rate: 110, min: 220, hours: 3 },
+                { id: 'fenetre_pvc', label: 'Fenêtre PVC double vitrage', unit: 'u', rate: 450, min: 450, hours: 8 },
+                { id: 'volet_roulant', label: 'Volet roulant motorisé', unit: 'u', rate: 500, min: 500, hours: 5 },
+                { id: 'parquet_flottant', label: 'Parquet flottant', unit: 'm²', rate: 35, min: 300, hours: 0.25 },
+                { id: 'placard_sur_mesure', label: 'Placard sur mesure', unit: 'ml', rate: 300, min: 600, hours: 6 }
+            ],
+            "Plâtrerie": [
+                { id: 'cloison_ba13', label: 'Cloison BA13 sur ossature', unit: 'm²', rate: 45, min: 350, hours: 0.3 },
+                { id: 'doublage_isolant', label: 'Doublage isolant', unit: 'm²', rate: 40, min: 320, hours: 0.25 },
+                { id: 'plafond_suspendu', label: 'Plafond suspendu', unit: 'm²', rate: 55, min: 400, hours: 0.4 },
+                { id: 'corniche_staff', label: 'Corniche staff', unit: 'ml', rate: 25, min: 150, hours: 0.1 },
+                { id: 'joint_placo', label: 'Joint placo', unit: 'ml', rate: 3, min: 100, hours: 0.02 }
+            ],
+            "Couverture": [
+                { id: 'toiture_tuile', label: 'Toiture tuiles neuve', unit: 'm²', rate: 85, min: 1500, hours: 0.6 },
+                { id: 'reparation_fuite', label: 'Réparation fuite toiture', unit: 'forfait', rate: 450, min: 450, hours: 6 },
+                { id: 'pose_gouttiere', label: 'Pose gouttière zinc', unit: 'ml', rate: 35, min: 210, hours: 0.25 },
+                { id: 'demoussage_toiture', label: 'Démoussage toiture', unit: 'm²', rate: 12, min: 300, hours: 0.1 },
+                { id: 'reprise_faitiere', label: 'Reprise faîtière', unit: 'ml', rate: 65, min: 325, hours: 0.4 }
+            ],
+            "Isolation": [
+                { id: 'isolation_combles', label: 'Isolation combles laine soufflée', unit: 'm²', rate: 25, min: 500, hours: 0.2 },
+                { id: 'isolation_murs', label: 'Isolation murs intérieurs', unit: 'm²', rate: 35, min: 400, hours: 0.25 },
+                { id: 'isolation_plancher', label: 'Isolation plancher bas', unit: 'm²', rate: 30, min: 300, hours: 0.25 },
+                { id: 'isolation_exterieure', label: 'Isolation extérieure polystyrène', unit: 'm²', rate: 95, min: 1500, hours: 0.6 },
+                { id: 'etancheite_air', label: "Étanchéité à l'air — membrane", unit: 'm²', rate: 18, min: 200, hours: 0.1 }
+            ],
+            "Climatisation": [
+                { id: 'clim_monosplit', label: 'Climatiseur monosplit — pose', unit: 'forfait', rate: 1100, min: 1100, hours: 18 },
+                { id: 'clim_multisplit_2ui', label: 'Climatiseur multisplit 2 unités intérieures — pose', unit: 'forfait', rate: 2200, min: 2200, hours: 40 },
+                { id: 'clim_multisplit_3ui', label: 'Climatiseur multisplit 3 unités intérieures — pose', unit: 'forfait', rate: 3300, min: 3300, hours: 60 },
+                { id: 'clim_multisplit_4ui', label: 'Climatiseur multisplit 4 unités intérieures — pose', unit: 'forfait', rate: 4400, min: 4400, hours: 80 },
+                { id: 'clim_multisplit_5ui', label: 'Climatiseur multisplit 5 unités intérieures — pose', unit: 'forfait', rate: 5500, min: 5500, hours: 100 },
+                { id: 'entretien_clim', label: 'Entretien climatisation', unit: 'forfait', rate: 120, min: 120, hours: 2 },
+                { id: 'pompe_a_chaleur', label: 'Pompe à chaleur air/eau', unit: 'forfait', rate: 8500, min: 8500, hours: 80 },
+                { id: 'vmc_double_flux', label: 'VMC double flux', unit: 'forfait', rate: 3200, min: 3200, hours: 35 }
+            ],
+            "Terrassement": [
+                { id: 'decaissement', label: 'Décaissement terrain', unit: 'm²', rate: 12, min: 400, hours: 0.2 },
+                { id: 'tranchee_technique', label: 'Tranchée technique', unit: 'ml', rate: 30, min: 300, hours: 0.25 },
+                { id: 'drainage_peripherique', label: 'Drainage périphérique', unit: 'ml', rate: 40, min: 400, hours: 0.4 },
+                { id: 'evacuation_deblais', label: 'Évacuation des déblais', unit: 'm²', rate: 20, min: 300, hours: 0.3 },
+                { id: 'couche_forme_tout_venant', label: 'Réalisation de la couche de forme en tout-venant', unit: 'm²', rate: 25, min: 400, hours: 0.3 },
+                { id: 'remblaiement', label: 'Remblaiement', unit: 'm²', rate: 8, min: 200, hours: 0.1 }
+            ],
+            "Serrurerie": [
+                { id: 'porte_blindee', label: 'Pose porte blindée', unit: 'forfait', rate: 1200, min: 1200, hours: 20 },
+                { id: 'grille_securite', label: 'Grille de sécurité', unit: 'm²', rate: 220, min: 440, hours: 1.5 },
+                { id: 'rideau_metal', label: 'Rideau métallique motorisé', unit: 'forfait', rate: 2500, min: 2500, hours: 35 },
+                { id: 'serrure_3points', label: 'Serrure 3 points — pose', unit: 'forfait', rate: 350, min: 350, hours: 4 },
+                { id: 'depannage_serrurerie', label: 'Dépannage ouverture porte', unit: 'forfait', rate: 120, min: 120, hours: 2 }
+            ],
+            "Aménagement extérieur": [
+                { id: 'pose_gazon', label: 'Pose gazon en rouleau', unit: 'm²', rate: 15, min: 300, hours: 0.1 },
+                { id: 'cloture_rigide', label: 'Clôture rigide', unit: 'ml', rate: 60, min: 300, hours: 0.5 },
+                { id: 'allee_pavee', label: 'Allée pavée', unit: 'm²', rate: 75, min: 600, hours: 0.4 },
+                { id: 'terrasse_bois', label: 'Terrasse bois', unit: 'm²', rate: 110, min: 1000, hours: 0.7 },
+                { id: 'abri_jardin', label: 'Abri de jardin — montage', unit: 'forfait', rate: 650, min: 650, hours: 16 }
+            ]
+        };
+
+        // Tâches éligibles à la TVA réduite (5,5 %)
+        const TVA55_TASKS = new Set([
+            'chauffe_eau_200',
+            'chaudiere_gaz',
+            'isolation_combles',
+            'isolation_murs',
+            'isolation_plancher',
+            'isolation_exterieure',
+            'etancheite_air',
+            'pompe_a_chaleur',
+            'vmc_double_flux'
+        ]);
+
+        // Distances approximatives depuis Vailhauquès (km aller simple)
+        const CITY_DISTANCES = {
+            montpellier: 15,
+            beziers: 70,
+            sete: 45,
+            nimes: 85,
+            agde: 75
+        };
+        const BASE_COORDS = { lat: 43.65, lon: 3.72 }; // Vailhauquès approximatif
+        const FUEL_COST_PER_KM = 0.5;
+        const FLOOR_COST_NO_ELEVATOR = 15;
+        const PORTAGE_COST_PER_M = 0.5;
+        const WASTE_COST_PER_M3 = 50;
+        async function getDistanceFromCity(city) {
+            const key = (city || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            if (CITY_DISTANCES[key]) return CITY_DISTANCES[key];
+            try {
+                const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(city)}&limit=1&autocomplete=0&lat=${BASE_COORDS.lat}&lon=${BASE_COORDS.lon}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const feature = data.features && data.features[0];
+                    if (feature) {
+                        const [lon, lat] = feature.geometry.coordinates;
+                        const R = 6371; // Rayon terrestre en km
+                        const dLat = (lat - BASE_COORDS.lat) * Math.PI / 180;
+                        const dLon = (lon - BASE_COORDS.lon) * Math.PI / 180;
+                        const a = Math.sin(dLat / 2) ** 2 + Math.cos(BASE_COORDS.lat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                        const dist = Math.round(R * c);
+                        CITY_DISTANCES[key] = dist;
+                        return dist;
+                    }
+                }
+            } catch (e) {
+                console.error('Erreur distance', e);
+            }
+            return 20;
+        }
+
+        // Variables globales
+        let currentStep = 0;
+        let pdfRows = [];
+        // Helper functions
+        // Formatting utility that avoids locale-specific non breaking spaces
+        // to keep PDF output compatible with basic fonts.
+        const formatEUR = n => {
+            const value = (n || 0).toLocaleString('fr-FR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })
+                .replace(/[\u202F\u00A0]/g, ' ');
+            return `${value} EUR`;
+        };
+        const byId = id => document.getElementById(id);
+
+        function renderCompany() {
+            byId('company-title').textContent = company.name;
+            document.title = 'Devis intelligent — ' + company.name;
+            const legal = `${company.name} — SIREN ${company.siren} — RCS ${company.rcs} — TVA ${company.tva} — ${company.insurance} — ${company.address} — ${company.email} — ${company.phone}. Validité 30 jours.`;
+            byId('company-legal').textContent = legal;
+            const logo = company.name.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+            byId('company-logo').textContent = logo;
+            byId('c-name').value = company.name;
+            byId('c-address').value = company.address;
+            byId('c-phone').value = company.phone;
+            byId('c-email').value = company.email;
+            byId('c-siren').value = company.siren;
+            byId('c-siret').value = company.siret;
+            byId('c-rcs').value = company.rcs;
+            byId('c-tva').value = company.tva;
+            byId('c-assurance').value = company.insurance;
+        }
+
+        function saveCompany() {
+            company = {
+                name: byId('c-name').value.trim(),
+                address: byId('c-address').value.trim(),
+                phone: byId('c-phone').value.trim(),
+                email: byId('c-email').value.trim(),
+                siren: byId('c-siren').value.trim(),
+                siret: byId('c-siret').value.trim(),
+                rcs: byId('c-rcs').value.trim(),
+                tva: byId('c-tva').value.trim(),
+                insurance: byId('c-assurance').value.trim()
+            };
+            localStorage.setItem('company', JSON.stringify(company));
+            renderCompany();
+        }
+
+        // Fonction pour créer une ligne de tâche
+        function addTaskRow() {
+            const tasksContainer = byId('tasks');
+            const row = document.createElement('div');
+            row.className = 'task-row';
+
+            // Sélection du métier
+            const tradeSelect = document.createElement('select');
+            tradeSelect.className = 'trade-select';
+            tradeSelect.innerHTML = '<option value="">Choisir un métier...</option>';
+            Object.keys(CATALOG).forEach(trade => {
+                const option = document.createElement('option');
+                option.value = trade;
+                option.textContent = trade;
+                tradeSelect.appendChild(option);
+            });
+
+            // Sélection de la tâche
+            const taskSelect = document.createElement('select');
+            taskSelect.className = 'task-select';
+            taskSelect.innerHTML = '<option value="">Choisir une tâche...</option>';
+            taskSelect.disabled = true;
+
+            // Quantité
+            const qtyInput = document.createElement('input');
+            qtyInput.className = 'qty-input';
+            qtyInput.type = 'number';
+            qtyInput.min = '0';
+            qtyInput.value = '1';
+            qtyInput.placeholder = 'Qté';
+
+            // Unité
+            const unitDiv = document.createElement('div');
+            unitDiv.className = 'pill';
+            unitDiv.textContent = '—';
+
+            const detailInput = document.createElement('input');
+            detailInput.className = 'detail-input';
+            detailInput.type = 'text';
+            detailInput.placeholder = 'Détails';
+
+            // Bouton supprimer
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-ghost';
+            deleteBtn.type = 'button';
+            deleteBtn.textContent = '🗑️';
+
+            // Event listeners
+            tradeSelect.addEventListener('change', function() {
+                const selectedTrade = this.value;
+                taskSelect.innerHTML = '<option value="">Choisir une tâche...</option>';
+
+                if (selectedTrade && CATALOG[selectedTrade]) {
+                    taskSelect.disabled = false;
+                    CATALOG[selectedTrade].forEach(task => {
+                        const option = document.createElement('option');
+                        option.value = task.id;
+                        option.textContent = task.label;
+                        option.dataset.unit = task.unit;
+                        option.dataset.rate = task.rate;
+                        option.dataset.min = task.min;
+                        option.dataset.hours = task.hours;
+                        option.dataset.tva55 = TVA55_TASKS.has(task.id) ? '1' : '0';
+                        taskSelect.appendChild(option);
+                    });
+                } else {
+                    taskSelect.disabled = true;
+                }
+
+                unitDiv.textContent = '—';
+                qtyInput.disabled = false;
+                qtyInput.value = '1';
+                updatePricing();
+            });
+
+            taskSelect.addEventListener('change', function() {
+                const selectedOption = this.selectedOptions[0];
+                if (selectedOption && selectedOption.dataset.unit) {
+                    unitDiv.textContent = selectedOption.dataset.unit;
+
+                    // Si c'est un forfait, mettre la quantité à 1 mais permettre la modification
+                    if (selectedOption.dataset.unit === 'forfait') {
+                        qtyInput.value = '1';
+                    }
+                    qtyInput.disabled = false;
+                } else {
+                    unitDiv.textContent = '—';
+                    qtyInput.disabled = false;
+                }
+                updatePricing();
+            });
+
+            qtyInput.addEventListener('input', updatePricing);
+            detailInput.addEventListener('input', updatePricing);
+
+            deleteBtn.addEventListener('click', function() {
+                row.remove();
+                updatePricing();
+            });
+
+            // Assembler la ligne
+            row.appendChild(tradeSelect);
+            row.appendChild(taskSelect);
+            row.appendChild(qtyInput);
+            row.appendChild(unitDiv);
+            row.appendChild(detailInput);
+            row.appendChild(deleteBtn);
+
+            tasksContainer.appendChild(row);
+            updatePricing();
+        }
+
+        function addManualTaskRow() {
+            const tasksContainer = byId('tasks');
+            const row = document.createElement('div');
+            row.className = 'task-row manual';
+
+            const tradeInput = document.createElement('input');
+            tradeInput.className = 'trade-input';
+            tradeInput.type = 'text';
+            tradeInput.placeholder = 'Métier';
+
+            const labelInput = document.createElement('input');
+            labelInput.className = 'label-input';
+            labelInput.type = 'text';
+            labelInput.placeholder = 'Tâche';
+
+            const qtyInput = document.createElement('input');
+            qtyInput.className = 'qty-input';
+            qtyInput.type = 'number';
+            qtyInput.min = '0';
+            qtyInput.value = '1';
+            qtyInput.placeholder = 'Qté';
+
+            const unitInput = document.createElement('input');
+            unitInput.className = 'unit-input';
+            unitInput.type = 'text';
+            unitInput.placeholder = 'Unité';
+
+            const rateInput = document.createElement('input');
+            rateInput.className = 'rate-input';
+            rateInput.type = 'number';
+            rateInput.min = '0';
+            rateInput.placeholder = 'PU HT';
+
+            const detailInput = document.createElement('input');
+            detailInput.className = 'detail-input';
+            detailInput.type = 'text';
+            detailInput.placeholder = 'Détails';
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-ghost';
+            deleteBtn.type = 'button';
+            deleteBtn.textContent = '🗑️';
+
+            [tradeInput, labelInput, qtyInput, unitInput, rateInput, detailInput].forEach(el => {
+                el.addEventListener('input', updatePricing);
+            });
+            deleteBtn.addEventListener('click', function() {
+                row.remove();
+                updatePricing();
+            });
+
+            row.appendChild(tradeInput);
+            row.appendChild(labelInput);
+            row.appendChild(qtyInput);
+            row.appendChild(unitInput);
+            row.appendChild(rateInput);
+            row.appendChild(detailInput);
+            row.appendChild(deleteBtn);
+
+            tasksContainer.appendChild(row);
+            updatePricing();
+        }
+
+        // Fonction pour lire toutes les tâches
+        function readTasks() {
+            const taskRows = document.querySelectorAll('.task-row');
+            const result = [];
+
+            taskRows.forEach(row => {
+                if (row.classList.contains('manual')) {
+                    const trade = row.querySelector('.trade-input').value.trim();
+                    const label = row.querySelector('.label-input').value.trim();
+                    const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+                    const unit = row.querySelector('.unit-input').value.trim();
+                    const rate = parseFloat(row.querySelector('.rate-input').value) || 0;
+                    const detail = row.querySelector('.detail-input').value.trim();
+                    if (trade && label && qty > 0 && rate > 0 && unit) {
+                        result.push({
+                            trade: trade,
+                            taskId: 'custom',
+                            label: label,
+                            unit: unit,
+                            rate: rate,
+                            min: 0,
+                            hours: 0,
+                            qty: qty,
+                            tva55: false,
+                            detail: detail
+                        });
+                    }
+                } else {
+                    const tradeSelect = row.querySelector('.trade-select');
+                    const taskSelect = row.querySelector('.task-select');
+                    const qtyInput = row.querySelector('.qty-input');
+                    const detail = row.querySelector('.detail-input').value.trim();
+
+                    const trade = tradeSelect.value;
+                    const taskId = taskSelect.value;
+                    const qty = parseFloat(qtyInput.value) || 0;
+
+                    if (trade && taskId && qty > 0) {
+                        const taskOption = taskSelect.selectedOptions[0];
+                        if (taskOption) {
+                            result.push({
+                                trade: trade,
+                                taskId: taskId,
+                                label: taskOption.textContent,
+                                unit: taskOption.dataset.unit,
+                                rate: parseFloat(taskOption.dataset.rate),
+                                min: parseFloat(taskOption.dataset.min),
+                                hours: parseFloat(taskOption.dataset.hours),
+                                qty: qty,
+                                tva55: taskOption.dataset.tva55 === '1',
+                                detail: detail
+                            });
+                        }
+                    }
+                }
+            });
+
+            return result;
+        }
+
+        // Fonction de calcul des prix
+        async function updatePricing() {
+            const tasks = readTasks();
+            let tasksTotal = 0;
+            let totalHours = 0;
+            const rows = [];
+            const tradeTotals = {};
+            const messages = [];
+
+            // Taux de majoration appliqué aux tâches en fonction des options
+            let optionRate = 0;
+            if (byId('urgence').value === 'oui') optionRate += 0.10;
+            if (byId('weekend').value === 'oui') optionRate += 0.25;
+            if (byId('nuit').value === 'oui') optionRate += 0.20;
+            const pack = byId('pack').value;
+            if (pack === 'confort') optionRate += 0.12;
+            else if (pack === 'premium') optionRate += 0.25;
+
+            // Calcul du prix des tâches avec majoration éventuelle
+            tasks.forEach(task => {
+                let price = 0;
+
+                switch (task.unit) {
+                    case 'm²':
+                    case 'ml':
+                    case 'u':
+                        price = task.rate * task.qty;
+                        break;
+                    case 'forfait':
+                        price = task.rate * task.qty;
+                        break;
+                }
+
+                // Appliquer le minimum
+                if (task.min) {
+                    price = Math.max(price, task.min);
+                }
+
+                // Marge automatique
+                const marginRate = task.hours > 0 ? 0.30 : 0.15;
+                price *= (1 + marginRate);
+
+                // Répartir les options sur les tâches
+                price *= (1 + optionRate);
+
+                const hours = task.hours * task.qty;
+                totalHours += hours;
+                tasksTotal += price;
+                rows.push({ trade: task.trade, description: `${task.trade} — ${task.label}${task.detail ? ' — ' + task.detail : ''}`, qty: task.qty, unit: task.unit, price });
+            });
+
+            const baseTotal = tasksTotal;
+            let siteRate = 0;
+            let siteFixed = 0;
+            const floor = parseInt(byId('etage').value) || 0;
+            if (byId('ascenseur').value === 'Non') siteFixed += floor * FLOOR_COST_NO_ELEVATOR;
+            siteFixed += (parseFloat(byId('portage').value) || 0) * PORTAGE_COST_PER_M;
+            switch (byId('acces').value) {
+                case 'difficile': siteRate += 0.05; break;
+            }
+            switch (byId('stationnement').value) {
+                case 'moyen': siteRate += 0.02; break;
+                case 'difficile': siteRate += 0.05; break;
+            }
+            siteFixed += parseFloat(byId('parking_fees').value) || 0;
+            switch (byId('engins').value) {
+                case 'limité':
+                    siteRate += 0.03;
+                    messages.push('Attention, accès engins limité : +3 %');
+                    break;
+                case 'impossible':
+                    siteRate += 0.07;
+                    messages.push('Attention, engins non accessibles : +7 %');
+                    break;
+            }
+            siteFixed += (parseFloat(byId('dechets').value) || 0) * WASTE_COST_PER_M3;
+            switch (byId('complexite').value) {
+                case 'moyenne': siteRate += 0.05; break;
+                case 'haute': siteRate += 0.10; break;
+            }
+            const siteExtra = siteFixed + baseTotal * siteRate;
+            if (siteExtra > 0 && baseTotal > 0) {
+                rows.forEach(row => {
+                    const share = (row.price / baseTotal) * siteExtra;
+                    row.price += share;
+                });
+                tasksTotal += siteExtra;
+            }
+
+            // Durée estimée du chantier
+            let workDays = totalHours / 7;
+            const speed = byId('speed') ? byId('speed').value : 'normal';
+            const speedFactor = speed === 'rapide' ? 0.8 : speed === 'lent' ? 1.2 : 1;
+            workDays *= speedFactor;
+            const days = totalHours > 0 ? Math.ceil(workDays) : 0;
+
+            // Coût des trajets basé sur la durée réelle
+            const distance = await getDistanceFromCity(byId('ville').value);
+            const travelCost = distance * 2 * workDays * FUEL_COST_PER_KM;
+            if (travelCost > 0 && tasksTotal > 0) {
+                rows.forEach(row => {
+                    const share = (row.price / tasksTotal) * travelCost;
+                    row.price += share;
+                });
+                tasksTotal += travelCost;
+            }
+
+            rows.forEach(r => {
+                tradeTotals[r.trade] = (tradeTotals[r.trade] || 0) + r.price;
+            });
+
+            let totalHT = tasksTotal;
+
+            // Remise commerciale automatique
+            const remiseThreshold = 10000;
+            const remiseRate = totalHT > remiseThreshold ? 0.05 : 0;
+            let remiseAmount = 0;
+            if (remiseRate > 0) {
+                remiseAmount = totalHT * remiseRate;
+                totalHT -= remiseAmount;
+                byId('discount-row').style.display = '';
+                byId('discount-amt').textContent = '-' + formatEUR(remiseAmount);
+            } else {
+                byId('discount-row').style.display = 'none';
+            }
+
+            // TVA
+            const tvaMode = byId('tva_mode').value;
+            const logement2ans = byId('logement_2ans').checked;
+            let tvaRate;
+
+            if (tvaMode === 'auto') {
+                const all55 = tasks.length > 0 && tasks.every(t => t.tva55);
+                if (all55) {
+                    tvaRate = 0.055;
+                } else if (logement2ans) {
+                    tvaRate = 0.10;
+                } else {
+                    tvaRate = 0.20;
+                }
+            } else {
+                tvaRate = parseFloat(tvaMode) / 100;
+            }
+
+            const tvaAmount = totalHT * tvaRate;
+            const totalTTC = totalHT + tvaAmount;
+
+            pdfRows = rows.map(r => ({
+                description: r.description,
+                qty: r.qty,
+                unitPrice: r.price / (r.qty || 1),
+                total: r.price
+            }));
+            Object.entries(tradeTotals).forEach(([trade, sum]) => {
+                pdfRows.push({ description: `Sous-total ${trade}`, qty: '', unitPrice: '', total: sum });
+            });
+
+            // Mise à jour de l'affichage
+            byId('total-ht').textContent = formatEUR(totalHT);
+            byId('total-ttc').textContent = formatEUR(totalTTC);
+            byId('f-total-ht').textContent = formatEUR(totalHT);
+            byId('f-total-ttc').textContent = formatEUR(totalTTC);
+            byId('tva-rate').textContent = `${(tvaRate * 100).toFixed(1).replace(/\.0$/, '')}%`;
+            byId('tva-amt').textContent = formatEUR(tvaAmount);
+            byId('count-tasks').textContent = `${tasks.length} ${tasks.length > 1 ? 'tâches' : 'tâche'}`;
+            byId('duration').textContent = days > 0 ? `${days} ${days > 1 ? 'jours' : 'jour'}` : '—';
+
+            // Mise à jour du tableau détaillé
+            const rowsContainer = byId('rows');
+            rowsContainer.innerHTML = '';
+
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                const td1 = document.createElement('td');
+                td1.textContent = `${row.description} (${row.qty} ${row.unit})`;
+                const td2 = document.createElement('td');
+                td2.className = 'right';
+                td2.textContent = formatEUR(row.price);
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                rowsContainer.appendChild(tr);
+            });
+            Object.entries(tradeTotals).forEach(([trade, sum]) => {
+                const tr = document.createElement('tr');
+                tr.className = 'subtotal';
+                const td1 = document.createElement('td');
+                td1.className = 'total';
+                td1.textContent = `Sous-total ${trade}`;
+                const td2 = document.createElement('td');
+                td2.className = 'right total';
+                td2.textContent = formatEUR(sum);
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                rowsContainer.appendChild(tr);
+            });
+
+            const msgEl = byId('messages');
+            if (msgEl) {
+                if (messages.length) {
+                    msgEl.innerHTML = messages.join('<br>');
+                    msgEl.style.display = '';
+                } else {
+                    msgEl.style.display = 'none';
+                }
+            }
+        }
+
+        // Initialisation
+        byId('add-task').addEventListener('click', addTaskRow);
+        byId('add-manual-task').addEventListener('click', addManualTaskRow);
+        const optionIds = ['urgence', 'weekend', 'nuit', 'speed', 'pack', 'tva_mode'];
+        optionIds.forEach(id => {
+            const el = byId(id);
+            if (el) el.addEventListener('change', updatePricing);
+        });
+        const siteIds = ['etage', 'ascenseur', 'portage', 'acces', 'stationnement', 'parking_fees', 'engins', 'dechets', 'complexite'];
+        siteIds.forEach(id => {
+            const el = byId(id);
+            if (el) {
+                el.addEventListener('change', updatePricing);
+                el.addEventListener('input', updatePricing);
+            }
+        });
+        const logement2ansEl = byId('logement_2ans');
+        if (logement2ansEl) logement2ansEl.addEventListener('change', updatePricing);
+        const villeEl = byId('ville');
+        if (villeEl) villeEl.addEventListener('input', updatePricing);
+        addTaskRow();
+
+        // Génération du récapitulatif
+        function buildRecap() {
+            const recap = byId('recap');
+            const tasks = readTasks();
+            let html = '<h3>Coordonnées</h3>';
+            html += `<p>${byId('name').value} — ${byId('email').value} — ${byId('phone').value}</p>`;
+            const comment = byId('comment').value.trim();
+            if (comment) {
+                html += `<p>${comment}</p>`;
+            }
+            if (tasks.length > 0) {
+                html += '<h3>Tâches</h3><ul>';
+                tasks.forEach(t => {
+                    html += `<li>${t.trade} — ${t.label} (${t.qty} ${t.unit})${t.detail ? ': ' + t.detail : ''}</li>`;
+                });
+                html += '</ul>';
+            }
+            html += `<p><strong>Total HT :</strong> ${byId('f-total-ht').textContent}<br><strong>Total TTC :</strong> ${byId('f-total-ttc').textContent} (TVA ${byId('tva-rate').textContent})</p>`;
+            recap.innerHTML = html;
+        }
+
+        // Navigation vers le récapitulatif
+        const btnNext = byId('btn-next');
+        if (btnNext) {
+            btnNext.addEventListener('click', async function () {
+                await updatePricing();
+                buildRecap();
+                const step5 = byId('step-5');
+                step5.style.display = 'block';
+                step5.scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+        const btnEdit = byId('btn-edit');
+        if (btnEdit) {
+            btnEdit.addEventListener('click', function () {
+                byId('step-5').style.display = 'none';
+                byId('step-4').scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+
+        async function generatePdf(kind) {
+            await updatePricing();
+            buildRecap();
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.text(byId('company-logo').textContent || 'LOGO', 14, 20);
+            if (kind === 'devis') {
+                doc.setFontSize(12);
+                doc.setTextColor(220, 38, 38);
+                doc.text('DEVIS PROVISOIRE', 150, 20);
+                doc.setTextColor(0, 0, 0);
+            }
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(18);
+            const title = kind === 'facture' ? 'FACTURE' : 'DEVIS';
+            doc.text(title, 105, 30, { align: 'center' });
+
+            let y = 40;
+            doc.setFontSize(12);
+            doc.text('Informations Entreprise', 14, y);
+            y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Entreprise : ${company.name}`, 14, y); y += 6;
+            doc.text(`Adresse : ${company.address}`, 14, y); y += 6;
+            doc.text(`Téléphone : ${company.phone}`, 14, y); y += 6;
+            doc.text(`Email : ${company.email}`, 14, y); y += 6;
+            doc.text(`SIREN : ${company.siren}`, 14, y); y += 6;
+            doc.text(`SIRET : ${company.siret}`, 14, y); y += 6;
+            doc.text(`RCS : ${company.rcs}`, 14, y); y += 6;
+            doc.text(`TVA : ${company.tva}`, 14, y); y += 6;
+            doc.text(`Assurance décennale : ${company.insurance}`, 14, y); y += 10;
+
+            doc.setFont('helvetica', 'bold');
+            doc.text('Informations Client', 14, y);
+            y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Nom : ${byId('name').value}`, 14, y); y += 6;
+            doc.text(`Adresse : ${byId('ville').value}`, 14, y); y += 6;
+            doc.text(`Téléphone : ${byId('phone').value}`, 14, y); y += 10;
+
+            const label = kind === 'facture' ? 'Facture' : 'Devis';
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Détails ${kind === 'facture' ? 'de la' : 'du'} ${label}`, 14, y);
+            y += 6;
+
+            if (pdfRows.length > 0 && doc.autoTable) {
+                doc.autoTable({
+                    startY: y,
+                    head: [['Description', 'Quantité', 'PU HT (EUR)', 'Total HT (EUR)']],
+                    body: pdfRows.map(r => [r.description, r.qty.toString(), formatEUR(r.unitPrice), formatEUR(r.total)]),
+                    styles: { fontSize: 10, cellPadding: 3 },
+                    headStyles: { fillColor: [0, 0, 0], textColor: 255 },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    theme: 'striped'
+                });
+                y = doc.lastAutoTable.finalY + 10;
+            }
+
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Sous-total HT : ${byId('f-total-ht').textContent}`, 196, y, { align: 'right' });
+            doc.text(`TVA (${byId('tva-rate').textContent}) : ${byId('tva-amt').textContent}`, 196, y + 7, { align: 'right' });
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(220, 38, 38);
+            doc.text(`Total TTC : ${byId('f-total-ttc').textContent}`, 196, y + 14, { align: 'right' });
+            doc.setTextColor(0, 0, 0);
+            y += 26;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+
+            const addTextBlock = text => {
+                const lines = doc.splitTextToSize(text, 182);
+                doc.text(lines, 14, y);
+                y += lines.length * 5;
+            };
+
+            if (kind === 'devis') {
+                addTextBlock('Durée de validité du devis : 30 jours');
+            }
+            addTextBlock("Prix indiqué : sous réserve d'évolution du coût des matériaux, ajusté à la commande, selon stock et la livraison.");
+            addTextBlock(`TVA applicable : ${byId('tva-rate').textContent}`);
+            addTextBlock("Mention légale : 50% d'acompte à la commande, solde à la livraison.");
+            addTextBlock('SRT légales : TVA applicable, RC Pro, coordonnées disponibles sur demande.');
+
+            addTextBlock('Signature :');
+            doc.line(40, y, 120, y);
+            y += 10;
+
+            const dataUrl = doc.output('dataurlstring');
+            saveArchive(kind, dataUrl);
+            doc.save(`${kind}.pdf`);
+        }
+
+        function saveArchive(kind, dataUrl) {
+            const archives = JSON.parse(localStorage.getItem('archives') || '[]');
+            archives.push({ kind, dataUrl, date: new Date().toISOString() });
+            localStorage.setItem('archives', JSON.stringify(archives));
+        }
+
+        function renderArchives() {
+            const list = byId('archive-list');
+            list.innerHTML = '';
+            const archives = JSON.parse(localStorage.getItem('archives') || '[]');
+            archives.forEach((a, i) => {
+                const li = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = a.dataUrl;
+                link.download = `${a.kind}-${i + 1}.pdf`;
+                link.textContent = `${a.kind.toUpperCase()} - ${new Date(a.date).toLocaleString()}`;
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        const btnPdf = byId('btn-pdf');
+        if (btnPdf) {
+            btnPdf.addEventListener('click', () => generatePdf('devis'));
+        }
+
+        const btnInvoice = byId('btn-invoice');
+        if (btnInvoice) {
+            btnInvoice.addEventListener('click', () => generatePdf('facture'));
+        }
+
+        const btnArchives = byId('btn-archives');
+        if (btnArchives) {
+            btnArchives.addEventListener('click', function () {
+                const arch = byId('archives');
+                if (arch.style.display === 'none') {
+                    renderArchives();
+                    arch.style.display = 'block';
+                    arch.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    arch.style.display = 'none';
+                }
+            });
+        }
+
+        const btnCompany = byId('btn-company');
+        if (btnCompany) {
+            btnCompany.addEventListener('click', function () {
+                const cs = byId('company-settings');
+                cs.style.display = cs.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+        const btnSaveCompany = byId('btn-save-company');
+        if (btnSaveCompany) {
+            btnSaveCompany.addEventListener('click', function () {
+                saveCompany();
+                byId('company-settings').style.display = 'none';
+            });
+        }
+
+        const themeToggle = byId('theme-toggle');
+        if (themeToggle) {
+            const applyTheme = t => {
+                document.documentElement.setAttribute('data-theme', t);
+                themeToggle.textContent = t === 'dark' ? 'Mode clair' : 'Mode sombre';
+            };
+            applyTheme(localStorage.getItem('theme') || 'dark');
+            themeToggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', current);
+                applyTheme(current);
+            });
+        }
+
+        const villeInput = byId('ville');
+        const villeList = byId('ville-list');
+        if (villeInput) {
+            let debounce;
+            villeInput.addEventListener('input', function () {
+                const q = this.value.trim();
+                if (debounce) clearTimeout(debounce);
+                if (q.length < 3) return;
+                debounce = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&type=municipality&limit=5`);
+                        const data = await res.json();
+                        villeList.innerHTML = data.features.map(f => `<option value="${f.properties.label}"></option>`).join('');
+                    } catch (e) { }
+                }, 300);
+            });
+        }
+
+        const stepsEls = [1,2,3,4,5].map(n => byId(`step-${n}`));
+        const progressBarEl = byId('progress-bar');
+        function updateProgressBar() {
+            let current = 1;
+            stepsEls.forEach((el, i) => {
+                if (el.getBoundingClientRect().top <= 80) current = i + 1;
+            });
+            progressBarEl.style.width = (current / stepsEls.length) * 100 + '%';
+        }
+        document.addEventListener('scroll', updateProgressBar);
+        updateProgressBar();
+
+        renderCompany();
+        });
+    </script>
+</body>
+</html>
