@@ -12,12 +12,24 @@
     <style>
         :root {
             --bg: #0b1220;
+            --bg-grad: #1e293b;
             --fg: #e5e7eb;
             --muted: #94a3b8;
             --card: #0f172a;
             --line: #1f2937;
             --accent: #22c55e;
             --danger: #ef4444;
+        }
+
+        html[data-theme='light'] {
+            --bg: #f9fafb;
+            --bg-grad: #f3f4f6;
+            --fg: #111827;
+            --muted: #6b7280;
+            --card: #ffffff;
+            --line: #e5e7eb;
+            --accent: #16a34a;
+            --danger: #b91c1c;
         }
         
         * {
@@ -31,13 +43,30 @@
         body {
             margin: 0;
             font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-            background: radial-gradient(circle at 25% 25%, #1e293b, var(--bg));
+            background: radial-gradient(circle at 25% 25%, var(--bg-grad), var(--bg));
             color: var(--fg);
             line-height: 1.6;
         }
         
         a {
             color: var(--accent);
+        }
+
+        #progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--line);
+            z-index: 1000;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0;
+            background: var(--accent);
+            transition: width 0.3s ease;
         }
         
         .container {
@@ -88,9 +117,9 @@
         }
         
         .card {
-            background: rgba(15, 23, 42, 0.75);
+            background: var(--card);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--line);
             border-radius: 16px;
             padding: 16px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
@@ -160,7 +189,7 @@
             padding: 12px;
             border-radius: 12px;
             border: 1px solid var(--line);
-            background: #0b1220;
+            background: var(--card);
             color: var(--fg);
             font-size: 14px;
             transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -170,7 +199,7 @@
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
-            background: #111827;
+            background: var(--bg);
         }
         
         input[type="checkbox"], input[type="radio"] {
@@ -335,13 +364,17 @@
     </style>
 </head>
 <body>
+    <div id="progress-container"><div id="progress-bar"></div></div>
     <div class="container">
         <header>
             <div class="logo" id="company-logo">BM</div>
             <div>
                 <h1>Devis intelligent — <span id="company-title">SARL BRUNO MIRA</span></h1>
                 <div class="sub">Formulaire multi‑étapes · Tarification automatique par accès chantier, métiers et tâches · PDF & capture de lead</div>
-                <button id="btn-company" class="btn btn-ghost" type="button" style="margin-top:8px">Infos entreprise</button>
+                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                    <button id="btn-company" class="btn btn-ghost" type="button">Infos entreprise</button>
+                    <button id="theme-toggle" class="btn btn-ghost" type="button">Mode clair</button>
+                </div>
             </div>
         </header>
         
@@ -375,7 +408,8 @@
                     <div class="row">
                         <div>
                             <label>Adresse (ville)</label>
-                            <input id="ville" placeholder="Montpellier, Béziers, Sète…"/>
+                            <input id="ville" list="ville-list" placeholder="Montpellier, Béziers, Sète…"/>
+                            <datalist id="ville-list"></datalist>
                         </div>
                         <div>
                             <label>Date souhaitée</label>
@@ -604,6 +638,10 @@
                         <tr>
                             <td class="total">Total HT</td>
                             <td class="right total" id="f-total-ht">—</td>
+                        </tr>
+                        <tr id="discount-row" style="display:none">
+                            <td>Remise commerciale</td>
+                            <td class="right" id="discount-amt"></td>
                         </tr>
                         <tr>
                             <td>TVA <span id="tva-rate">—</span></td>
@@ -1187,6 +1225,19 @@
 
             let totalHT = tasksTotal;
 
+            // Remise commerciale automatique
+            const remiseThreshold = 10000;
+            const remiseRate = totalHT > remiseThreshold ? 0.05 : 0;
+            let remiseAmount = 0;
+            if (remiseRate > 0) {
+                remiseAmount = totalHT * remiseRate;
+                totalHT -= remiseAmount;
+                byId('discount-row').style.display = '';
+                byId('discount-amt').textContent = '-' + formatEUR(remiseAmount);
+            } else {
+                byId('discount-row').style.display = 'none';
+            }
+
             // TVA
             const tvaMode = byId('tva_mode').value;
             const logement2ans = byId('logement_2ans').checked;
@@ -1310,12 +1361,20 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
+            doc.setFontSize(16);
+            doc.text(byId('company-logo').textContent || 'LOGO', 14, 20);
+            if (kind === 'devis') {
+                doc.setFontSize(12);
+                doc.setTextColor(220, 38, 38);
+                doc.text('DEVIS PROVISOIRE', 150, 20);
+                doc.setTextColor(0, 0, 0);
+            }
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(18);
             const title = kind === 'facture' ? 'FACTURE' : 'DEVIS';
-            doc.text(title, 105, 20, { align: 'center' });
+            doc.text(title, 105, 30, { align: 'center' });
 
-            let y = 30;
+            let y = 40;
             doc.setFontSize(12);
             doc.text('Informations Entreprise', 14, y);
             y += 6;
@@ -1383,6 +1442,10 @@
             addTextBlock("Mention légale : 50% d'acompte à la commande, solde à la livraison.");
             addTextBlock('SRT légales : TVA applicable, RC Pro, coordonnées disponibles sur demande.');
 
+            addTextBlock('Signature :');
+            doc.line(40, y, 120, y);
+            y += 10;
+
             const dataUrl = doc.output('dataurlstring');
             saveArchive(kind, dataUrl);
             doc.save(`${kind}.pdf`);
@@ -1447,6 +1510,50 @@
                 byId('company-settings').style.display = 'none';
             });
         }
+
+        const themeToggle = byId('theme-toggle');
+        if (themeToggle) {
+            const applyTheme = t => {
+                document.documentElement.setAttribute('data-theme', t);
+                themeToggle.textContent = t === 'dark' ? 'Mode clair' : 'Mode sombre';
+            };
+            applyTheme(localStorage.getItem('theme') || 'dark');
+            themeToggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', current);
+                applyTheme(current);
+            });
+        }
+
+        const villeInput = byId('ville');
+        const villeList = byId('ville-list');
+        if (villeInput) {
+            let debounce;
+            villeInput.addEventListener('input', function () {
+                const q = this.value.trim();
+                if (debounce) clearTimeout(debounce);
+                if (q.length < 3) return;
+                debounce = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&type=municipality&limit=5`);
+                        const data = await res.json();
+                        villeList.innerHTML = data.features.map(f => `<option value="${f.properties.label}"></option>`).join('');
+                    } catch (e) { }
+                }, 300);
+            });
+        }
+
+        const stepsEls = [1,2,3,4,5].map(n => byId(`step-${n}`));
+        const progressBarEl = byId('progress-bar');
+        function updateProgressBar() {
+            let current = 1;
+            stepsEls.forEach((el, i) => {
+                if (el.getBoundingClientRect().top <= 80) current = i + 1;
+            });
+            progressBarEl.style.width = (current / stepsEls.length) * 100 + '%';
+        }
+        document.addEventListener('scroll', updateProgressBar);
+        updateProgressBar();
 
         renderCompany();
         });
