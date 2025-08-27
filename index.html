@@ -708,7 +708,9 @@
                 { id: 'seuil_beton', label: 'Seuil béton', unit: 'ml', rate: 60, min: 240, hours: 0.4 },
                 { id: 'fondations_semelles', label: 'Fondations semelles filantes', unit: 'ml', rate: 120, min: 600, hours: 0.8 },
                 { id: 'muret_cloture', label: 'Muret de clôture', unit: 'ml', rate: 95, min: 500, hours: 0.6 },
-                { id: 'ragreage_sol', label: 'Ragréage sol', unit: 'm²', rate: 18, min: 250, hours: 0.1 }
+                { id: 'ragreage_sol', label: 'Ragréage sol', unit: 'm²', rate: 18, min: 250, hours: 0.1 },
+                { id: 'escalier_beton', label: 'Escalier béton', unit: 'u', rate: 2200, min: 2200, hours: 30 },
+                { id: 'mur_pierre', label: 'Mur en pierres sèches', unit: 'm²', rate: 150, min: 600, hours: 0.9 }
             ],
             "Plomberie": [
                 { id: 'reseau_ecs', label: 'Réseau eau chaude/froide', unit: 'ml', rate: 42, min: 350, hours: 0.3 },
@@ -718,7 +720,9 @@
                 { id: 'evac_eu', label: 'Évacuation EU', unit: 'ml', rate: 30, min: 180, hours: 0.2 },
                 { id: 'receveur_douche', label: 'Receveur de douche — pose', unit: 'forfait', rate: 380, min: 380, hours: 7 },
                 { id: 'chaudiere_gaz', label: 'Chaudière gaz condensation — pose', unit: 'forfait', rate: 2500, min: 2500, hours: 30 },
-                { id: 'raccordement_evier', label: 'Raccordement évier cuisine', unit: 'forfait', rate: 180, min: 180, hours: 3 }
+                { id: 'raccordement_evier', label: 'Raccordement évier cuisine', unit: 'forfait', rate: 180, min: 180, hours: 3 },
+                { id: 'pose_lavabo', label: 'Lavabo — pose', unit: 'forfait', rate: 250, min: 250, hours: 5 },
+                { id: 'debouchage_canalisation', label: 'Débouchage canalisation', unit: 'forfait', rate: 180, min: 180, hours: 3 }
             ],
             "Électricité": [
                 { id: 'renov_t2', label: 'Rénovation électrique T2', unit: 'forfait', rate: 3200, min: 3200, hours: 40 },
@@ -728,7 +732,9 @@
                 { id: 'point_lumineux', label: 'Point lumineux', unit: 'u', rate: 70, min: 140, hours: 0.5 },
                 { id: 'vmc_simple', label: 'VMC simple flux', unit: 'forfait', rate: 850, min: 850, hours: 16 },
                 { id: 'prise_exterieure', label: 'Prise extérieure étanche', unit: 'u', rate: 80, min: 160, hours: 0.8 },
-                { id: 'mise_terre', label: 'Mise à la terre complète', unit: 'forfait', rate: 650, min: 650, hours: 14 }
+                { id: 'mise_terre', label: 'Mise à la terre complète', unit: 'forfait', rate: 650, min: 650, hours: 14 },
+                { id: 'chauffage_electrique', label: 'Radiateur électrique — pose', unit: 'u', rate: 150, min: 150, hours: 3 },
+                { id: 'domotique_centrale', label: 'Centrale domotique', unit: 'forfait', rate: 1200, min: 1200, hours: 25 }
             ],
             "Carrelage": [
                 { id: 'sol_interieur', label: 'Carrelage sol intérieur', unit: 'm²', rate: 55, min: 500, hours: 0.3 },
@@ -737,7 +743,9 @@
                 { id: 'faience', label: 'Faïence murale', unit: 'm²', rate: 45, min: 300, hours: 0.25 },
                 { id: 'plinthes_carrelage', label: 'Plinthes assorties', unit: 'ml', rate: 15, min: 120, hours: 0.05 },
                 { id: 'escalier_carrelage', label: 'Escalier carrelé', unit: 'u', rate: 110, min: 330, hours: 2 },
-                { id: 'pose_mosaique', label: 'Pose mosaïque', unit: 'm²', rate: 95, min: 200, hours: 0.3 }
+                { id: 'pose_mosaique', label: 'Pose mosaïque', unit: 'm²', rate: 95, min: 200, hours: 0.3 },
+                { id: 'carrelage_mural_sdb', label: 'Carrelage mural salle de bains', unit: 'm²', rate: 65, min: 300, hours: 0.3 },
+                { id: 'joint_carrelage', label: 'Réalisation joints carrelage', unit: 'm²', rate: 10, min: 100, hours: 0.1 }
             ],
             "Peinture": [
                 { id: 'murs_plafonds', label: 'Peinture murs & plafonds', unit: 'm²', rate: 14, min: 300, hours: 0.15 },
@@ -745,35 +753,45 @@
                 { id: 'enduit_lissage', label: 'Enduit de lissage', unit: 'm²', rate: 12, min: 180, hours: 0.15 },
                 { id: 'peinture_facade', label: 'Peinture de façade', unit: 'm²', rate: 28, min: 600, hours: 0.25 },
                 { id: 'papier_peint', label: 'Pose papier peint', unit: 'm²', rate: 20, min: 200, hours: 0.2 },
-                { id: 'peinture_anti_humidite', label: 'Peinture anti-humidité', unit: 'm²', rate: 18, min: 180, hours: 0.18 }
+                { id: 'peinture_anti_humidite', label: 'Peinture anti-humidité', unit: 'm²', rate: 18, min: 180, hours: 0.18 },
+                { id: 'peinture_boiseries_ext', label: 'Boiseries extérieures', unit: 'm²', rate: 25, min: 250, hours: 0.25 },
+                { id: 'peinture_radiateur', label: 'Peinture radiateur', unit: 'u', rate: 40, min: 80, hours: 0.5 }
             ],
             "Menuiserie": [
                 { id: 'porte_interieure', label: 'Porte intérieure — pose', unit: 'u', rate: 110, min: 220, hours: 3 },
                 { id: 'fenetre_pvc', label: 'Fenêtre PVC double vitrage', unit: 'u', rate: 450, min: 450, hours: 8 },
                 { id: 'volet_roulant', label: 'Volet roulant motorisé', unit: 'u', rate: 500, min: 500, hours: 5 },
                 { id: 'parquet_flottant', label: 'Parquet flottant', unit: 'm²', rate: 35, min: 300, hours: 0.25 },
-                { id: 'placard_sur_mesure', label: 'Placard sur mesure', unit: 'ml', rate: 300, min: 600, hours: 6 }
+                { id: 'placard_sur_mesure', label: 'Placard sur mesure', unit: 'ml', rate: 300, min: 600, hours: 6 },
+                { id: 'escalier_bois', label: 'Escalier bois — pose', unit: 'forfait', rate: 2800, min: 2800, hours: 45 },
+                { id: 'fenetre_aluminium', label: 'Fenêtre aluminium', unit: 'u', rate: 650, min: 650, hours: 10 }
             ],
             "Plâtrerie": [
                 { id: 'cloison_ba13', label: 'Cloison BA13 sur ossature', unit: 'm²', rate: 45, min: 350, hours: 0.3 },
                 { id: 'doublage_isolant', label: 'Doublage isolant', unit: 'm²', rate: 40, min: 320, hours: 0.25 },
                 { id: 'plafond_suspendu', label: 'Plafond suspendu', unit: 'm²', rate: 55, min: 400, hours: 0.4 },
                 { id: 'corniche_staff', label: 'Corniche staff', unit: 'ml', rate: 25, min: 150, hours: 0.1 },
-                { id: 'joint_placo', label: 'Joint placo', unit: 'ml', rate: 3, min: 100, hours: 0.02 }
+                { id: 'joint_placo', label: 'Joint placo', unit: 'ml', rate: 3, min: 100, hours: 0.02 },
+                { id: 'cloison_acoustique', label: 'Cloison acoustique', unit: 'm²', rate: 65, min: 500, hours: 0.5 },
+                { id: 'reparation_fissures', label: 'Réparation fissures', unit: 'ml', rate: 12, min: 120, hours: 0.1 }
             ],
             "Couverture": [
                 { id: 'toiture_tuile', label: 'Toiture tuiles neuve', unit: 'm²', rate: 85, min: 1500, hours: 0.6 },
                 { id: 'reparation_fuite', label: 'Réparation fuite toiture', unit: 'forfait', rate: 450, min: 450, hours: 6 },
                 { id: 'pose_gouttiere', label: 'Pose gouttière zinc', unit: 'ml', rate: 35, min: 210, hours: 0.25 },
                 { id: 'demoussage_toiture', label: 'Démoussage toiture', unit: 'm²', rate: 12, min: 300, hours: 0.1 },
-                { id: 'reprise_faitiere', label: 'Reprise faîtière', unit: 'ml', rate: 65, min: 325, hours: 0.4 }
+                { id: 'reprise_faitiere', label: 'Reprise faîtière', unit: 'ml', rate: 65, min: 325, hours: 0.4 },
+                { id: 'pose_velux', label: 'Pose fenêtre de toit', unit: 'u', rate: 850, min: 850, hours: 16 },
+                { id: 'isolation_toiture', label: 'Isolation sous toiture', unit: 'm²', rate: 40, min: 400, hours: 0.35 }
             ],
             "Isolation": [
                 { id: 'isolation_combles', label: 'Isolation combles laine soufflée', unit: 'm²', rate: 25, min: 500, hours: 0.2 },
                 { id: 'isolation_murs', label: 'Isolation murs intérieurs', unit: 'm²', rate: 35, min: 400, hours: 0.25 },
                 { id: 'isolation_plancher', label: 'Isolation plancher bas', unit: 'm²', rate: 30, min: 300, hours: 0.25 },
                 { id: 'isolation_exterieure', label: 'Isolation extérieure polystyrène', unit: 'm²', rate: 95, min: 1500, hours: 0.6 },
-                { id: 'etancheite_air', label: "Étanchéité à l'air — membrane", unit: 'm²', rate: 18, min: 200, hours: 0.1 }
+                { id: 'etancheite_air', label: "Étanchéité à l'air — membrane", unit: 'm²', rate: 18, min: 200, hours: 0.1 },
+                { id: 'isolation_phonique', label: 'Isolation phonique', unit: 'm²', rate: 45, min: 450, hours: 0.3 },
+                { id: 'depose_isolation', label: 'Dépose ancienne isolation', unit: 'm²', rate: 12, min: 240, hours: 0.15 }
             ],
             "Climatisation": [
                 { id: 'clim_monosplit', label: 'Climatiseur monosplit — pose', unit: 'forfait', rate: 1100, min: 1100, hours: 18 },
@@ -783,7 +801,9 @@
                 { id: 'clim_multisplit_5ui', label: 'Climatiseur multisplit 5 unités intérieures — pose', unit: 'forfait', rate: 5500, min: 5500, hours: 100 },
                 { id: 'entretien_clim', label: 'Entretien climatisation', unit: 'forfait', rate: 120, min: 120, hours: 2 },
                 { id: 'pompe_a_chaleur', label: 'Pompe à chaleur air/eau', unit: 'forfait', rate: 8500, min: 8500, hours: 80 },
-                { id: 'vmc_double_flux', label: 'VMC double flux', unit: 'forfait', rate: 3200, min: 3200, hours: 35 }
+                { id: 'vmc_double_flux', label: 'VMC double flux', unit: 'forfait', rate: 3200, min: 3200, hours: 35 },
+                { id: 'remplacement_filtre', label: 'Remplacement filtre', unit: 'forfait', rate: 90, min: 90, hours: 1.5 },
+                { id: 'diagnostic_panne', label: 'Diagnostic panne climatisation', unit: 'forfait', rate: 150, min: 150, hours: 2 }
             ],
             "Terrassement": [
                 { id: 'decaissement', label: 'Décaissement terrain', unit: 'm²', rate: 12, min: 400, hours: 0.2 },
@@ -791,21 +811,27 @@
                 { id: 'drainage_peripherique', label: 'Drainage périphérique', unit: 'ml', rate: 40, min: 400, hours: 0.4 },
                 { id: 'evacuation_deblais', label: 'Évacuation des déblais', unit: 'm²', rate: 20, min: 300, hours: 0.3 },
                 { id: 'couche_forme_tout_venant', label: 'Réalisation de la couche de forme en tout-venant', unit: 'm²', rate: 25, min: 400, hours: 0.3 },
-                { id: 'remblaiement', label: 'Remblaiement', unit: 'm²', rate: 8, min: 200, hours: 0.1 }
+                { id: 'remblaiement', label: 'Remblaiement', unit: 'm²', rate: 8, min: 200, hours: 0.1 },
+                { id: 'puits_perdu', label: 'Puits perdu', unit: 'u', rate: 450, min: 450, hours: 8 },
+                { id: 'mur_soutenement', label: 'Mur de soutènement', unit: 'm²', rate: 120, min: 800, hours: 1 }
             ],
             "Serrurerie": [
                 { id: 'porte_blindee', label: 'Pose porte blindée', unit: 'forfait', rate: 1200, min: 1200, hours: 20 },
                 { id: 'grille_securite', label: 'Grille de sécurité', unit: 'm²', rate: 220, min: 440, hours: 1.5 },
                 { id: 'rideau_metal', label: 'Rideau métallique motorisé', unit: 'forfait', rate: 2500, min: 2500, hours: 35 },
                 { id: 'serrure_3points', label: 'Serrure 3 points — pose', unit: 'forfait', rate: 350, min: 350, hours: 4 },
-                { id: 'depannage_serrurerie', label: 'Dépannage ouverture porte', unit: 'forfait', rate: 120, min: 120, hours: 2 }
+                { id: 'depannage_serrurerie', label: 'Dépannage ouverture porte', unit: 'forfait', rate: 120, min: 120, hours: 2 },
+                { id: 'garde_corps', label: 'Garde-corps acier', unit: 'ml', rate: 180, min: 360, hours: 1.2 },
+                { id: 'motorisation_portail', label: 'Motorisation portail', unit: 'forfait', rate: 950, min: 950, hours: 18 }
             ],
             "Aménagement extérieur": [
                 { id: 'pose_gazon', label: 'Pose gazon en rouleau', unit: 'm²', rate: 15, min: 300, hours: 0.1 },
                 { id: 'cloture_rigide', label: 'Clôture rigide', unit: 'ml', rate: 60, min: 300, hours: 0.5 },
                 { id: 'allee_pavee', label: 'Allée pavée', unit: 'm²', rate: 75, min: 600, hours: 0.4 },
                 { id: 'terrasse_bois', label: 'Terrasse bois', unit: 'm²', rate: 110, min: 1000, hours: 0.7 },
-                { id: 'abri_jardin', label: 'Abri de jardin — montage', unit: 'forfait', rate: 650, min: 650, hours: 16 }
+                { id: 'abri_jardin', label: 'Abri de jardin — montage', unit: 'forfait', rate: 650, min: 650, hours: 16 },
+                { id: 'pergola_bois', label: 'Pergola bois', unit: 'forfait', rate: 2200, min: 2200, hours: 30 },
+                { id: 'eclairage_jardin', label: 'Éclairage de jardin', unit: 'forfait', rate: 650, min: 650, hours: 12 }
             ]
         };
 
