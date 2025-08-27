@@ -653,7 +653,9 @@
                         </tr>
                     </tfoot>
                 </table>
-                
+
+                <div id="messages" class="alert" style="display:none;margin-top:12px"></div>
+
                 <div class="alert" style="margin-top:12px">
                     Estimation indicative. Visite technique et devis signé nécessaires pour valider prix, quantités et délais. TVA réduite sous conditions.
                 </div>
@@ -1134,6 +1136,8 @@
             let tasksTotal = 0;
             let totalHours = 0;
             const rows = [];
+            const tradeTotals = {};
+            const messages = [];
 
             // Taux de majoration appliqué aux tâches en fonction des options
             let optionRate = 0;
@@ -1164,13 +1168,17 @@
                     price = Math.max(price, task.min);
                 }
 
+                // Marge automatique
+                const marginRate = task.hours > 0 ? 0.30 : 0.15;
+                price *= (1 + marginRate);
+
                 // Répartir les options sur les tâches
                 price *= (1 + optionRate);
 
                 const hours = task.hours * task.qty;
                 totalHours += hours;
                 tasksTotal += price;
-                rows.push({ description: `${task.trade} — ${task.label}${task.detail ? ' — ' + task.detail : ''}`, qty: task.qty, unit: task.unit, price });
+                rows.push({ trade: task.trade, description: `${task.trade} — ${task.label}${task.detail ? ' — ' + task.detail : ''}`, qty: task.qty, unit: task.unit, price });
             });
 
             const baseTotal = tasksTotal;
@@ -1188,8 +1196,14 @@
             }
             siteFixed += parseFloat(byId('parking_fees').value) || 0;
             switch (byId('engins').value) {
-                case 'limité': siteRate += 0.03; break;
-                case 'impossible': siteRate += 0.07; break;
+                case 'limité':
+                    siteRate += 0.03;
+                    messages.push('Attention, accès engins limité : +3 %');
+                    break;
+                case 'impossible':
+                    siteRate += 0.07;
+                    messages.push('Attention, engins non accessibles : +7 %');
+                    break;
             }
             siteFixed += (parseFloat(byId('dechets').value) || 0) * WASTE_COST_PER_M3;
             switch (byId('complexite').value) {
@@ -1222,6 +1236,10 @@
                 });
                 tasksTotal += travelCost;
             }
+
+            rows.forEach(r => {
+                tradeTotals[r.trade] = (tradeTotals[r.trade] || 0) + r.price;
+            });
 
             let totalHT = tasksTotal;
 
@@ -1265,6 +1283,9 @@
                 unitPrice: r.price / (r.qty || 1),
                 total: r.price
             }));
+            Object.entries(tradeTotals).forEach(([trade, sum]) => {
+                pdfRows.push({ description: `Sous-total ${trade}`, qty: '', unitPrice: '', total: sum });
+            });
 
             // Mise à jour de l'affichage
             byId('total-ht').textContent = formatEUR(totalHT);
@@ -1291,6 +1312,29 @@
                 tr.appendChild(td2);
                 rowsContainer.appendChild(tr);
             });
+            Object.entries(tradeTotals).forEach(([trade, sum]) => {
+                const tr = document.createElement('tr');
+                tr.className = 'subtotal';
+                const td1 = document.createElement('td');
+                td1.className = 'total';
+                td1.textContent = `Sous-total ${trade}`;
+                const td2 = document.createElement('td');
+                td2.className = 'right total';
+                td2.textContent = formatEUR(sum);
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                rowsContainer.appendChild(tr);
+            });
+
+            const msgEl = byId('messages');
+            if (msgEl) {
+                if (messages.length) {
+                    msgEl.innerHTML = messages.join('<br>');
+                    msgEl.style.display = '';
+                } else {
+                    msgEl.style.display = 'none';
+                }
+            }
         }
 
         // Initialisation
