@@ -4,6 +4,13 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Devis intelligent</title>
+    <link rel="stylesheet" href="saas.css"/>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -364,6 +371,11 @@
     </style>
 </head>
 <body>
+    <div class="banner">1 mois gratuit sur l'offre Starter</div>
+    <nav class="navbar">
+        <div><a href="pricing.html">Tarifs</a></div>
+        <div><a href="account.html" class="cta">Mon compte</a></div>
+    </nav>
     <div id="progress-container"><div id="progress-bar"></div></div>
     <div class="container">
         <header>
@@ -1585,7 +1597,15 @@
         function saveArchive(kind, dataUrl) {
             const archives = JSON.parse(localStorage.getItem('archives') || '[]');
             archives.push({ kind, dataUrl, date: new Date().toISOString() });
-            localStorage.setItem('archives', JSON.stringify(archives));
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.plan === 'starter') {
+                const cutoff = new Date();
+                cutoff.setMonth(cutoff.getMonth() - 12);
+                const filtered = archives.filter(a => new Date(a.date) >= cutoff);
+                localStorage.setItem('archives', JSON.stringify(filtered));
+            } else {
+                localStorage.setItem('archives', JSON.stringify(archives));
+            }
         }
 
         function renderArchives() {
@@ -1609,8 +1629,13 @@
         }
 
         const btnInvoice = byId('btn-invoice');
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         if (btnInvoice) {
-            btnInvoice.addEventListener('click', () => generatePdf('facture'));
+            if (currentUser.plan === 'pro') {
+                btnInvoice.addEventListener('click', () => generatePdf('facture'));
+            } else {
+                btnInvoice.style.display = 'none';
+            }
         }
 
         const btnArchives = byId('btn-archives');
