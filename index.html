@@ -9,6 +9,12 @@
         const user = JSON.parse(localStorage.getItem('user') || 'null');
         if (!user) {
             window.location.href = 'login.html';
+        } else {
+            const planParam = new URLSearchParams(window.location.search).get('plan');
+            if (planParam) {
+                user.plan = planParam;
+                localStorage.setItem('user', JSON.stringify(user));
+            }
         }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1629,13 +1635,8 @@
         }
 
         const btnInvoice = byId('btn-invoice');
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         if (btnInvoice) {
-            if (currentUser.plan === 'pro') {
-                btnInvoice.addEventListener('click', () => generatePdf('facture'));
-            } else {
-                btnInvoice.style.display = 'none';
-            }
+            btnInvoice.addEventListener('click', () => generatePdf('facture'));
         }
 
         const btnArchives = byId('btn-archives');
