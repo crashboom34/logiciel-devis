@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Connexion</title>
   <link rel="stylesheet" href="saas.css"/>
+  <script>
+    if (localStorage.getItem('user')) {
+      window.location.href = 'account.html';
+    }
+  </script>
 </head>
 <body>
   <div class="banner">1 mois gratuit sur l'offre Starter</div>
@@ -14,6 +19,7 @@
     </div>
     <div>
       <a href="pricing.html">Tarifs</a>
+      <a id="nav-auth"></a>
     </div>
   </nav>
   <div class="container">
@@ -46,6 +52,17 @@
     localStorage.setItem('user', JSON.stringify({email: email, plan: 'starter'}));
     window.location.href = 'index.html';
   });
+
+  const navAuth = document.getElementById('nav-auth');
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (user) {
+    navAuth.href = 'account.html';
+    navAuth.textContent = 'Mon compte';
+    navAuth.classList.add('cta');
+  } else {
+    navAuth.href = 'login.html';
+    navAuth.textContent = 'Se connecter';
+  }
 </script>
 </body>
 </html>

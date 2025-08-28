@@ -15,7 +15,7 @@
     </div>
     <div>
       <a href="pricing.html">Tarifs</a>
-      <a href="account.html" class="cta">Mon compte</a>
+      <a id="nav-auth"></a>
     </div>
   </nav>
   <div class="container">
@@ -68,6 +68,17 @@
   }
   document.getElementById('btn-starter').addEventListener('click',()=>subscribe('price_starter','consent-starter'));
   document.getElementById('btn-pro').addEventListener('click',()=>subscribe('price_pro','consent-pro'));
+
+  const navAuth = document.getElementById('nav-auth');
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (user) {
+    navAuth.href = 'account.html';
+    navAuth.textContent = 'Mon compte';
+    navAuth.classList.add('cta');
+  } else {
+    navAuth.href = 'login.html';
+    navAuth.textContent = 'Se connecter';
+  }
 </script>
 </body>
 </html>
