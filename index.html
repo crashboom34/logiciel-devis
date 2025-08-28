@@ -9,6 +9,8 @@
         const user = JSON.parse(localStorage.getItem('user') || 'null');
         if (!user) {
             window.location.href = 'login.html';
+        } else if (!user.plan) {
+            window.location.href = 'pricing.html';
         } else {
             const planParam = new URLSearchParams(window.location.search).get('plan');
             if (planParam) {

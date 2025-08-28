@@ -49,8 +49,8 @@
       return;
     }
     // sauvegarde utilisateur en local
-    localStorage.setItem('user', JSON.stringify({email: email, plan: 'starter'}));
-    window.location.href = 'index.html';
+    localStorage.setItem('user', JSON.stringify({email: email, plan: null}));
+    window.location.href = 'pricing.html';
   });
 
   const navAuth = document.getElementById('nav-auth');
