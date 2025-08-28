@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Connexion</title>
+  <link rel="stylesheet" href="saas.css"/>
+</head>
+<body>
+  <div class="banner">1 mois gratuit sur l'offre Starter</div>
+  <nav class="navbar">
+    <div>
+      <a href="index.html">Accueil</a>
+    </div>
+    <div>
+      <a href="pricing.html">Tarifs</a>
+    </div>
+  </nav>
+  <div class="container">
+    <h1>Se connecter</h1>
+    <form id="login-form">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" required>
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="password" required>
+      </div>
+      <div class="form-group">
+        <label><input type="checkbox" id="consent" required> J'accepte le traitement de mes données (RGPD)</label>
+      </div>
+      <button type="submit" class="btn-primary">Connexion</button>
+    </form>
+  </div>
+<script>
+  document.getElementById('login-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const consent = document.getElementById('consent').checked;
+    if(!consent){
+      alert('Veuillez accepter le traitement des données');
+      return;
+    }
+    // sauvegarde utilisateur en local
+    localStorage.setItem('user', JSON.stringify({email: email, plan: 'starter'}));
+    window.location.href = 'index.html';
+  });
+</script>
+</body>
+</html>

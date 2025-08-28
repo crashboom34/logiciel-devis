@@ -1,0 +1,91 @@
+:root {
+  --bg: #0b1220;
+  --bg-grad: #1a2333;
+  --fg: #f1f5f9;
+  --muted: #9ca3af;
+  --card: #0f172a;
+  --line: #1f2937;
+  --accent: #22c55e;
+  --danger: #ef4444;
+}
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background: radial-gradient(circle at 25% 25%, var(--bg-grad), var(--bg));
+  color: var(--fg);
+}
+.navbar {
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  padding:12px 16px;
+  background:var(--card);
+  border-bottom:1px solid var(--line);
+}
+.navbar a {
+  color:var(--fg);
+  margin-left:16px;
+  text-decoration:none;
+}
+.navbar .cta {
+  background:var(--accent);
+  color:#042d17;
+  padding:8px 12px;
+  border-radius:8px;
+}
+.banner {
+  text-align:center;
+  background:var(--accent);
+  color:#042d17;
+  padding:8px;
+  font-weight:700;
+}
+.btn-primary {
+  background: var(--accent);
+  color:#042d17;
+  border:none;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.btn-secondary {
+  background:var(--card);
+  border:1px solid var(--line);
+  color:var(--fg);
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.container {
+  max-width: 800px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+.table-pricing {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:24px;
+}
+.table-pricing th, .table-pricing td {
+  border:1px solid var(--line);
+  padding:12px;
+  text-align:center;
+}
+.badge {
+  display:inline-block;
+  background:var(--accent);
+  color:#042d17;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+  margin-left:8px;
+}
+.form-group {margin-bottom:16px;}
+input[type="email"], input[type="password"], input[type="text"] {
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--fg);
+}

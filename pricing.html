@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Tarifs</title>
+  <link rel="stylesheet" href="saas.css"/>
+  <script src="https://js.stripe.com/v3"></script>
+</head>
+<body>
+  <div class="banner">1 mois gratuit sur l'offre Starter</div>
+  <nav class="navbar">
+    <div>
+      <a href="index.html">Accueil</a>
+    </div>
+    <div>
+      <a href="pricing.html">Tarifs</a>
+      <a href="account.html" class="cta">Mon compte</a>
+    </div>
+  </nav>
+  <div class="container">
+    <h1>Nos offres</h1>
+    <table class="table-pricing">
+      <thead>
+        <tr>
+          <th>Fonctionnalités</th>
+          <th>Starter <span class="badge">1er mois gratuit</span></th>
+          <th>Pro</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Devis illimités</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Factures illimitées</td><td>❌</td><td>✅</td></tr>
+        <tr><td>Multi‑utilisateurs</td><td>❌</td><td>✅</td></tr>
+        <tr><td>Archivage</td><td>Limité à 12 mois</td><td>Illimité</td></tr>
+        <tr><td>Options avancées</td><td>❌</td><td>✅</td></tr>
+      </tbody>
+    </table>
+    <div style="display:flex;gap:24px;justify-content:center;margin-top:24px;flex-wrap:wrap">
+      <div>
+        <h2>Starter</h2>
+        <p>9,99 € / mois</p>
+        <label><input type="checkbox" id="consent-starter"> J'accepte le traitement de mes données</label>
+        <button class="btn-primary" id="btn-starter">Essayer gratuitement</button>
+      </div>
+      <div>
+        <h2>Pro</h2>
+        <p>19,99 € / mois</p>
+        <label><input type="checkbox" id="consent-pro"> J'accepte le traitement de mes données</label>
+        <button class="btn-secondary" id="btn-pro">Passer en Pro</button>
+      </div>
+    </div>
+  </div>
+<script>
+  const stripe = Stripe('pk_test_12345'); // Remplacer par votre clé publique
+  function subscribe(priceId, consentId){
+    if(!document.getElementById(consentId).checked){
+      alert('Merci de consentir au traitement des données');
+      return;
+    }
+    fetch('https://example.com/create-checkout-session', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({priceId})
+    })
+    .then(r=>r.json())
+    .then(d=>stripe.redirectToCheckout({sessionId:d.sessionId}));
+  }
+  document.getElementById('btn-starter').addEventListener('click',()=>subscribe('price_starter','consent-starter'));
+  document.getElementById('btn-pro').addEventListener('click',()=>subscribe('price_pro','consent-pro'));
+</script>
+</body>
+</html>

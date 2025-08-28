@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Mon compte</title>
+  <link rel="stylesheet" href="saas.css"/>
+  <script src="https://js.stripe.com/v3"></script>
+  <script>
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if(!user){
+      window.location.href = 'login.html';
+    }
+  </script>
+</head>
+<body>
+  <div class="banner">1 mois gratuit sur l'offre Starter</div>
+  <nav class="navbar">
+    <div>
+      <a href="index.html">Accueil</a>
+    </div>
+    <div>
+      <a href="pricing.html">Tarifs</a>
+      <a href="account.html" class="cta">Mon compte</a>
+    </div>
+  </nav>
+  <div class="container">
+    <h1>Mon compte</h1>
+    <p>Email : <span id="user-email"></span></p>
+    <p>Formule : <span id="user-plan"></span></p>
+    <button id="manage-sub" class="btn-primary">Gérer l'abonnement</button>
+    <button id="logout" class="btn-secondary" style="margin-left:8px">Déconnexion</button>
+  </div>
+<script>
+  const u = JSON.parse(localStorage.getItem('user'));
+  document.getElementById('user-email').textContent = u.email;
+  document.getElementById('user-plan').textContent = u.plan === 'pro' ? 'Pro' : 'Starter';
+  document.getElementById('logout').addEventListener('click', ()=>{
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+  });
+  document.getElementById('manage-sub').addEventListener('click', ()=>{
+    // redirection vers le portail Stripe pour gérer l'abonnement
+    fetch('https://example.com/create-portal-session', {method:'POST'})
+      .then(r=>r.json())
+      .then(d=>window.location.href = d.url);
+  });
+</script>
+</body>
+</html>
