@@ -6,3 +6,4 @@
 - Configurable commercial discount (automatic or manual)
 - Automatic or manual project duration estimate
 - PDF export with logo placeholder, provisional stamp and signature line
+- Optional costing for new house construction based on total area and individual room surfaces
