@@ -27,7 +27,7 @@
     </div>
     <div>
       <a href="pricing.html">Tarifs</a>
-      <a href="account.html" class="cta">Mon compte</a>
+      <a id="nav-auth"></a>
     </div>
   </nav>
   <div class="container">
@@ -51,6 +51,17 @@
       .then(r=>r.json())
       .then(d=>window.location.href = d.url);
   });
+
+  const navAuth = document.getElementById('nav-auth');
+  const userNav = JSON.parse(localStorage.getItem('user') || 'null');
+  if (userNav) {
+    navAuth.href = 'account.html';
+    navAuth.textContent = 'Mon compte';
+    navAuth.classList.add('cta');
+  } else {
+    navAuth.href = 'login.html';
+    navAuth.textContent = 'Se connecter';
+  }
 </script>
 </body>
 </html>

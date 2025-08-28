@@ -380,7 +380,7 @@
     <div class="banner">1 mois gratuit sur l'offre Starter</div>
     <nav class="navbar">
         <div><a href="pricing.html">Tarifs</a></div>
-        <div><a href="account.html" class="cta">Mon compte</a></div>
+        <div><a id="nav-auth"></a></div>
     </nav>
     <div id="progress-container"><div id="progress-bar"></div></div>
     <div class="container">
@@ -701,6 +701,19 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+        const navAuth = document.getElementById('nav-auth');
+        const userNav = JSON.parse(localStorage.getItem('user') || 'null');
+        if (navAuth) {
+            if (userNav) {
+                navAuth.href = 'account.html';
+                navAuth.textContent = 'Mon compte';
+                navAuth.classList.add('cta');
+            } else {
+                navAuth.href = 'login.html';
+                navAuth.textContent = 'Se connecter';
+            }
+        }
+
         // Informations entreprise
         const DEFAULT_COMPANY = {
             name: 'SARL BRUNO MIRA',
