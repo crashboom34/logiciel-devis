@@ -320,6 +320,25 @@
             grid-template-columns: 1.2fr 1.2fr 0.6fr 0.6fr 0.6fr 1.2fr auto;
         }
 
+        .task-block {
+            margin-bottom: 8px;
+        }
+
+        .subtasks {
+            margin-left: 40px;
+        }
+
+        .subtask-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .subtask-row input {
+            flex: 1;
+        }
+
         @media (max-width: 600px) {
             .task-row {
                 grid-template-columns: 1fr 1fr;
@@ -980,6 +999,8 @@
         // Fonction pour créer une ligne de tâche
         function addTaskRow() {
             const tasksContainer = byId('tasks');
+            const block = document.createElement('div');
+            block.className = 'task-block';
             const row = document.createElement('div');
             row.className = 'task-row';
 
@@ -1073,7 +1094,7 @@
             detailInput.addEventListener('input', updatePricing);
 
             deleteBtn.addEventListener('click', function() {
-                row.remove();
+                block.remove();
                 updatePricing();
             });
 
@@ -1085,12 +1106,29 @@
             row.appendChild(detailInput);
             row.appendChild(deleteBtn);
 
-            tasksContainer.appendChild(row);
+            block.appendChild(row);
+
+            const subtaskContainer = document.createElement('div');
+            subtaskContainer.className = 'subtasks';
+            block.appendChild(subtaskContainer);
+
+            const addSubBtn = document.createElement('button');
+            addSubBtn.className = 'btn btn-ghost';
+            addSubBtn.type = 'button';
+            addSubBtn.textContent = '+ Sous-tâche';
+            addSubBtn.addEventListener('click', function() {
+                addSubtask(subtaskContainer);
+            });
+            block.appendChild(addSubBtn);
+
+            tasksContainer.appendChild(block);
             updatePricing();
         }
 
         function addManualTaskRow() {
             const tasksContainer = byId('tasks');
+            const block = document.createElement('div');
+            block.className = 'task-block';
             const row = document.createElement('div');
             row.className = 'task-row manual';
 
@@ -1136,7 +1174,7 @@
                 el.addEventListener('input', updatePricing);
             });
             deleteBtn.addEventListener('click', function() {
-                row.remove();
+                block.remove();
                 updatePricing();
             });
 
@@ -1148,16 +1186,58 @@
             row.appendChild(detailInput);
             row.appendChild(deleteBtn);
 
-            tasksContainer.appendChild(row);
+            block.appendChild(row);
+
+            const subtaskContainer = document.createElement('div');
+            subtaskContainer.className = 'subtasks';
+            block.appendChild(subtaskContainer);
+
+            const addSubBtn = document.createElement('button');
+            addSubBtn.className = 'btn btn-ghost';
+            addSubBtn.type = 'button';
+            addSubBtn.textContent = '+ Sous-tâche';
+            addSubBtn.addEventListener('click', function() {
+                addSubtask(subtaskContainer);
+            });
+            block.appendChild(addSubBtn);
+
+            tasksContainer.appendChild(block);
+            updatePricing();
+        }
+
+        function addSubtask(container) {
+            const row = document.createElement('div');
+            row.className = 'subtask-row';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'subtask-input';
+            input.placeholder = 'Sous-tâche';
+            input.addEventListener('input', updatePricing);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-ghost';
+            deleteBtn.type = 'button';
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.addEventListener('click', function() {
+                row.remove();
+                updatePricing();
+            });
+            row.appendChild(input);
+            row.appendChild(deleteBtn);
+            container.appendChild(row);
             updatePricing();
         }
 
         // Fonction pour lire toutes les tâches
         function readTasks() {
-            const taskRows = document.querySelectorAll('.task-row');
+            const taskBlocks = document.querySelectorAll('.task-block');
             const result = [];
 
-            taskRows.forEach(row => {
+            taskBlocks.forEach(block => {
+                const row = block.querySelector('.task-row');
+                const subtasks = Array.from(block.querySelectorAll('.subtask-input'))
+                    .map(i => i.value.trim())
+                    .filter(Boolean);
+
                 if (row.classList.contains('manual')) {
                     const trade = row.querySelector('.trade-input').value.trim();
                     const label = row.querySelector('.label-input').value.trim();
@@ -1176,7 +1256,8 @@
                             hours: 0,
                             qty: qty,
                             tva55: false,
-                            detail: detail
+                            detail: detail,
+                            subtasks: subtasks
                         });
                     }
                 } else {
@@ -1202,7 +1283,8 @@
                                 hours: parseFloat(taskOption.dataset.hours),
                                 qty: qty,
                                 tva55: taskOption.dataset.tva55 === '1',
-                                detail: detail
+                                detail: detail,
+                                subtasks: subtasks
                             });
                         }
                     }
@@ -1260,7 +1342,14 @@
                 const hours = task.hours * task.qty;
                 totalHours += hours;
                 tasksTotal += price;
-                rows.push({ trade: task.trade, description: `${task.trade} — ${task.label}${task.detail ? ' — ' + task.detail : ''}`, qty: task.qty, unit: task.unit, price });
+                let description = `${task.trade} — ${task.label}`;
+                if (task.detail) {
+                    description += ` — ${task.detail}`;
+                }
+                if (task.subtasks && task.subtasks.length > 0) {
+                    description += '\n' + task.subtasks.map(st => `- ${st}`).join('\n');
+                }
+                rows.push({ trade: task.trade, description, qty: task.qty, unit: task.unit, price });
             });
 
             const baseTotal = tasksTotal;
@@ -1492,7 +1581,15 @@
             if (tasks.length > 0) {
                 html += '<h3>Tâches</h3><ul>';
                 tasks.forEach(t => {
-                    html += `<li>${t.trade} — ${t.label} (${t.qty} ${t.unit})${t.detail ? ': ' + t.detail : ''}</li>`;
+                    html += `<li>${t.trade} — ${t.label} (${t.qty} ${t.unit})${t.detail ? ': ' + t.detail : ''}`;
+                    if (t.subtasks && t.subtasks.length > 0) {
+                        html += '<ul>';
+                        t.subtasks.forEach(st => {
+                            html += `<li>${st}</li>`;
+                        });
+                        html += '</ul>';
+                    }
+                    html += '</li>';
                 });
                 html += '</ul>';
             }
