@@ -1654,6 +1654,20 @@
             btnInvoice.addEventListener('click', () => generatePdf('facture'));
         }
 
+        const btnSend = byId('btn-send');
+        if (btnSend) {
+            btnSend.addEventListener('click', async function () {
+                await updatePricing();
+                buildRecap();
+                const recapText = byId('recap').innerText;
+                const subject = encodeURIComponent('Demande de devis');
+                const body = encodeURIComponent(
+                    `Bonjour,\n\nVoici ma demande de devis :\n\n${recapText}\n\nMerci de me rappeler au ${byId('phone').value}.`
+                );
+                window.location.href = `mailto:${company.email}?subject=${subject}&body=${body}`;
+            });
+        }
+
         const btnArchives = byId('btn-archives');
         if (btnArchives) {
             btnArchives.addEventListener('click', function () {
