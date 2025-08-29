@@ -759,7 +759,7 @@
                 { id: 'maison_salon', label: 'Salon / Séjour', unit: 'm²', rate: 1000, min: 7000, hours: 0.6 }
             ],
             "Maçonnerie": [
-                { id: 'dalle_beton', label: 'Dalle béton', unit: 'm²', rate: 95, min: 800, hours: 0.5 },
+                { id: 'dalle_beton', label: 'Dalle béton', unit: 'm²', rate: 95, min: 800, hours: 0.5, subtasks: ["Préparation du sol", "Coffrage", "Coulage du béton"] },
                 { id: 'ouverture_porteur', label: 'Ouverture mur porteur (IPN inclus)', unit: 'forfait', rate: 2800, min: 2800, hours: 35 },
                 { id: 'demolition_cloison', label: 'Démolition cloison', unit: 'm²', rate: 35, min: 300, hours: 0.15 },
                 { id: 'mur_agglo', label: 'Mur agglos 20', unit: 'm²', rate: 85, min: 600, hours: 0.6 },
@@ -778,7 +778,7 @@
                 { id: 'chauffe_eau_200', label: 'Chauffe‑eau 200 L — pose', unit: 'forfait', rate: 380, min: 380, hours: 6 },
                 { id: 'evac_eu', label: 'Évacuation EU', unit: 'ml', rate: 30, min: 180, hours: 0.2 },
                 { id: 'receveur_douche', label: 'Receveur de douche — pose', unit: 'forfait', rate: 380, min: 380, hours: 7 },
-                { id: 'chaudiere_gaz', label: 'Chaudière gaz condensation — pose', unit: 'forfait', rate: 2500, min: 2500, hours: 30 },
+                { id: 'chaudiere_gaz', label: 'Chaudière gaz condensation — pose', unit: 'forfait', rate: 2500, min: 2500, hours: 30, subtasks: ["Raccordement gaz", "Test d'étanchéité", "Mise en service"] },
                 { id: 'raccordement_evier', label: 'Raccordement évier cuisine', unit: 'forfait', rate: 180, min: 180, hours: 3 },
                 { id: 'pose_lavabo', label: 'Lavabo — pose', unit: 'forfait', rate: 250, min: 250, hours: 5 },
                 { id: 'debouchage_canalisation', label: 'Débouchage canalisation', unit: 'forfait', rate: 180, min: 180, hours: 3 }
@@ -1021,6 +1021,9 @@
             taskSelect.innerHTML = '<option value="">Choisir une tâche...</option>';
             taskSelect.disabled = true;
 
+            const subtaskContainer = document.createElement('div');
+            subtaskContainer.className = 'subtasks';
+
             // Quantité
             const qtyInput = document.createElement('input');
             qtyInput.className = 'qty-input';
@@ -1049,6 +1052,7 @@
             tradeSelect.addEventListener('change', function() {
                 const selectedTrade = this.value;
                 taskSelect.innerHTML = '<option value="">Choisir une tâche...</option>';
+                subtaskContainer.innerHTML = '';
 
                 if (selectedTrade && CATALOG[selectedTrade]) {
                     taskSelect.disabled = false;
@@ -1061,6 +1065,7 @@
                         option.dataset.min = task.min;
                         option.dataset.hours = task.hours;
                         option.dataset.tva55 = TVA55_TASKS.has(task.id) ? '1' : '0';
+                        if (task.subtasks) option.dataset.subtasks = task.subtasks.join('|');
                         taskSelect.appendChild(option);
                     });
                 } else {
@@ -1075,6 +1080,7 @@
 
             taskSelect.addEventListener('change', function() {
                 const selectedOption = this.selectedOptions[0];
+                subtaskContainer.innerHTML = '';
                 if (selectedOption && selectedOption.dataset.unit) {
                     unitDiv.textContent = selectedOption.dataset.unit;
 
@@ -1083,6 +1089,9 @@
                         qtyInput.value = '1';
                     }
                     qtyInput.disabled = false;
+                    if (selectedOption.dataset.subtasks) {
+                        selectedOption.dataset.subtasks.split('|').forEach(st => addSubtask(subtaskContainer, st));
+                    }
                 } else {
                     unitDiv.textContent = '—';
                     qtyInput.disabled = false;
@@ -1107,9 +1116,6 @@
             row.appendChild(deleteBtn);
 
             block.appendChild(row);
-
-            const subtaskContainer = document.createElement('div');
-            subtaskContainer.className = 'subtasks';
             block.appendChild(subtaskContainer);
 
             const addSubBtn = document.createElement('button');
@@ -1118,6 +1124,7 @@
             addSubBtn.textContent = '+ Sous-tâche';
             addSubBtn.addEventListener('click', function() {
                 addSubtask(subtaskContainer);
+                updatePricing();
             });
             block.appendChild(addSubBtn);
 
@@ -1198,6 +1205,7 @@
             addSubBtn.textContent = '+ Sous-tâche';
             addSubBtn.addEventListener('click', function() {
                 addSubtask(subtaskContainer);
+                updatePricing();
             });
             block.appendChild(addSubBtn);
 
@@ -1205,13 +1213,14 @@
             updatePricing();
         }
 
-        function addSubtask(container) {
+        function addSubtask(container, value = '') {
             const row = document.createElement('div');
             row.className = 'subtask-row';
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'subtask-input';
             input.placeholder = 'Sous-tâche';
+            input.value = value;
             input.addEventListener('input', updatePricing);
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'btn btn-ghost';
@@ -1224,7 +1233,6 @@
             row.appendChild(input);
             row.appendChild(deleteBtn);
             container.appendChild(row);
-            updatePricing();
         }
 
         // Fonction pour lire toutes les tâches
