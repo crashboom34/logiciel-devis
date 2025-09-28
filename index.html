@@ -896,12 +896,32 @@
         };
 
         async function hydrateCatalogWithSubtasks() {
-            let data = null;
+            const applySubtasks = (library) => {
+                if (!library) return false;
+                Object.values(CATALOG).forEach(tasks => {
+                    tasks.forEach(task => {
+                        const subtasks = library[task.id];
+                        if (subtasks && Array.isArray(subtasks)) {
+                            task.subtasks = [...subtasks];
+                        }
+                    });
+                });
+                return true;
+            };
+
+            let hydrated = false;
+
+            if (window.SUBTASK_LIBRARY) {
+                hydrated = applySubtasks(window.SUBTASK_LIBRARY) || hydrated;
+            }
 
             try {
                 const response = await fetch('subtasks.json', { cache: 'no-store' });
                 if (response.ok) {
-                    data = await response.json();
+                    const data = await response.json();
+                    if (data && data.subtasks) {
+                        hydrated = applySubtasks(data.subtasks) || hydrated;
+                    }
                 } else {
                     console.warn(`Impossible de charger les sous-tâches (statut HTTP ${response.status})`);
                 }
@@ -909,18 +929,8 @@
                 console.warn('Impossible de charger les sous-tâches', error);
             }
 
-            if ((!data || !data.subtasks) && window.SUBTASK_LIBRARY) {
-                data = { subtasks: window.SUBTASK_LIBRARY };
-            }
-
-            if (data && data.subtasks) {
-                Object.values(CATALOG).forEach(tasks => {
-                    tasks.forEach(task => {
-                        if (data.subtasks[task.id]) {
-                            task.subtasks = data.subtasks[task.id];
-                        }
-                    });
-                });
+            if (!hydrated) {
+                console.warn("Aucune sous-tâche n'a pu être chargée. Vérifiez subtasks.json ou subtasks.js.");
             }
         }
 
