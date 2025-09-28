@@ -1202,6 +1202,8 @@
             row.appendChild(deleteBtn);
 
             block.appendChild(row);
+            const subtaskContainer = document.createElement('div');
+            subtaskContainer.className = 'subtasks';
             block.appendChild(subtaskContainer);
 
             const addSubBtn = document.createElement('button');
@@ -1280,9 +1282,6 @@
             row.appendChild(deleteBtn);
 
             block.appendChild(row);
-
-            const subtaskContainer = document.createElement('div');
-            subtaskContainer.className = 'subtasks';
             block.appendChild(subtaskContainer);
 
             const addSubBtn = document.createElement('button');
