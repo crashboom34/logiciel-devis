@@ -901,7 +901,7 @@
                 Object.values(CATALOG).forEach(tasks => {
                     tasks.forEach(task => {
                         const subtasks = library[task.id];
-                        if (subtasks && Array.isArray(subtasks)) {
+                        if (Array.isArray(subtasks)) {
                             task.subtasks = [...subtasks];
                         }
                     });
@@ -909,27 +909,29 @@
                 return true;
             };
 
-            let hydrated = false;
-
-            if (window.SUBTASK_LIBRARY) {
-                hydrated = applySubtasks(window.SUBTASK_LIBRARY) || hydrated;
-            }
+            let data = null;
 
             try {
                 const response = await fetch('subtasks.json', { cache: 'no-store' });
                 if (response.ok) {
-                    const data = await response.json();
-                    if (data && data.subtasks) {
-                        hydrated = applySubtasks(data.subtasks) || hydrated;
-                    }
+                    data = await response.json();
                 } else {
                     console.warn(`Impossible de charger les sous-tâches (statut HTTP ${response.status})`);
                 }
             } catch (error) {
-                console.warn('Impossible de charger les sous-tâches', error);
+                console.warn('Impossible de charger les sous-tâches à partir du fichier JSON', error);
             }
 
-            if (!hydrated) {
+            if (!data && window.SUBTASK_LIBRARY) {
+                data = { subtasks: window.SUBTASK_LIBRARY };
+            }
+
+            if (data && data.subtasks) {
+                const hydrated = applySubtasks(data.subtasks);
+                if (!hydrated) {
+                    console.warn('Aucune sous-tâche valide trouvée pour ce catalogue.');
+                }
+            } else {
                 console.warn("Aucune sous-tâche n'a pu être chargée. Vérifiez subtasks.json ou subtasks.js.");
             }
         }
