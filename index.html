@@ -951,10 +951,12 @@
         const PORTAGE_COST_PER_M = 0.5;
         const WASTE_COST_PER_M3 = 50;
         async function getDistanceFromCity(city) {
-            const key = (city || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const normalizedCity = (city || '').trim();
+            if (!normalizedCity) return 0;
+            const key = normalizedCity.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             if (CITY_DISTANCES[key]) return CITY_DISTANCES[key];
             try {
-                const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(city)}&limit=1&autocomplete=0&lat=${BASE_COORDS.lat}&lon=${BASE_COORDS.lon}`);
+                const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(normalizedCity)}&limit=1&autocomplete=0&lat=${BASE_COORDS.lat}&lon=${BASE_COORDS.lon}`);
                 if (res.ok) {
                     const data = await res.json();
                     const feature = data.features && data.features[0];
