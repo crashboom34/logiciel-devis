@@ -897,16 +897,19 @@
 
         async function hydrateCatalogWithSubtasks() {
             let data = null;
+
             try {
                 const response = await fetch('subtasks.json', { cache: 'no-store' });
                 if (response.ok) {
                     data = await response.json();
+                } else {
+                    console.warn(`Impossible de charger les sous-tâches (statut HTTP ${response.status})`);
                 }
             } catch (error) {
-                console.warn('Impossible de charger les sous-tâches à partir du fichier JSON', error);
+                console.warn('Impossible de charger les sous-tâches', error);
             }
 
-            if (!data && window.SUBTASK_LIBRARY) {
+            if ((!data || !data.subtasks) && window.SUBTASK_LIBRARY) {
                 data = { subtasks: window.SUBTASK_LIBRARY };
             }
 
