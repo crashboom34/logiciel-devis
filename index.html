@@ -896,42 +896,43 @@
         };
 
         async function hydrateCatalogWithSubtasks() {
-            const applySubtasks = (library) => {
+            const applySubtasks = (library, sourceLabel) => {
                 if (!library) return false;
+                let hydrated = false;
                 Object.values(CATALOG).forEach(tasks => {
                     tasks.forEach(task => {
                         const subtasks = library[task.id];
-                        if (Array.isArray(subtasks)) {
+                        if (Array.isArray(subtasks) && subtasks.length) {
                             task.subtasks = [...subtasks];
+                            hydrated = true;
                         }
                     });
                 });
-                return true;
+                if (!hydrated && sourceLabel) {
+                    console.warn(`Aucune sous-tâche correspondante trouvée dans ${sourceLabel}.`);
+                }
+                return hydrated;
             };
 
-            let data = null;
+            let subtasksLoaded = false;
 
             try {
                 const response = await fetch('subtasks.json', { cache: 'no-store' });
                 if (response.ok) {
-                    data = await response.json();
+                    const data = await response.json();
+                    subtasksLoaded = applySubtasks(data && data.subtasks, 'subtasks.json');
                 } else {
-                    console.warn(`Impossible de charger les sous-tâches (statut HTTP ${response.status})`);
+                    console.warn(`Impossible de charger les sous-tâches (statut HTTP ${response.status}).`);
                 }
             } catch (error) {
-                console.warn('Impossible de charger les sous-tâches à partir du fichier JSON', error);
+                console.warn('Impossible de charger les sous-tâches à partir du fichier JSON.', error);
             }
 
-            if (!data && window.SUBTASK_LIBRARY) {
-                data = { subtasks: window.SUBTASK_LIBRARY };
+            if (!subtasksLoaded && window.SUBTASK_LIBRARY) {
+                subtasksLoaded = applySubtasks(window.SUBTASK_LIBRARY, 'la bibliothèque embarquée');
             }
 
-            if (data && data.subtasks) {
-                const hydrated = applySubtasks(data.subtasks);
-                if (!hydrated) {
-                    console.warn('Aucune sous-tâche valide trouvée pour ce catalogue.');
-                }
-            } else {
+            if (!subtasksLoaded) {
                 console.warn("Aucune sous-tâche n'a pu être chargée. Vérifiez subtasks.json ou subtasks.js.");
             }
         }
