@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Devis intelligent</title>
     <link rel="stylesheet" href="saas.css"/>
+    <script defer src="subtasks.js"></script>
     <script>
         let user = JSON.parse(localStorage.getItem('user') || 'null');
 
@@ -894,6 +895,32 @@
             ]
         };
 
+        async function hydrateCatalogWithSubtasks() {
+            let data = null;
+            try {
+                const response = await fetch('subtasks.json', { cache: 'no-store' });
+                if (response.ok) {
+                    data = await response.json();
+                }
+            } catch (error) {
+                console.warn('Impossible de charger les sous-tâches à partir du fichier JSON', error);
+            }
+
+            if (!data && window.SUBTASK_LIBRARY) {
+                data = { subtasks: window.SUBTASK_LIBRARY };
+            }
+
+            if (data && data.subtasks) {
+                Object.values(CATALOG).forEach(tasks => {
+                    tasks.forEach(task => {
+                        if (data.subtasks[task.id]) {
+                            task.subtasks = data.subtasks[task.id];
+                        }
+                    });
+                });
+            }
+        }
+
         // Tâches éligibles à la TVA réduite (5,5 %)
         const TVA55_TASKS = new Set([
             'chauffe_eau_200',
@@ -1531,50 +1558,52 @@
             }
         }
 
-        // Initialisation
-        byId('add-task').addEventListener('click', addTaskRow);
-        byId('add-manual-task').addEventListener('click', addManualTaskRow);
-        const optionIds = ['urgence', 'weekend', 'nuit', 'speed', 'pack', 'tva_mode', 'discount_mode', 'duration_mode'];
-        optionIds.forEach(id => {
-            const el = byId(id);
-            if (el) el.addEventListener('change', updatePricing);
-        });
-        const inputIds = ['discount_value', 'manual_days'];
-        inputIds.forEach(id => {
-            const el = byId(id);
-            if (el) el.addEventListener('input', updatePricing);
-        });
+        function initializeInteractions() {
+            byId('add-task').addEventListener('click', addTaskRow);
+            byId('add-manual-task').addEventListener('click', addManualTaskRow);
+            const optionIds = ['urgence', 'weekend', 'nuit', 'speed', 'pack', 'tva_mode', 'discount_mode', 'duration_mode'];
+            optionIds.forEach(id => {
+                const el = byId(id);
+                if (el) el.addEventListener('change', updatePricing);
+            });
+            const inputIds = ['discount_value', 'manual_days'];
+            inputIds.forEach(id => {
+                const el = byId(id);
+                if (el) el.addEventListener('input', updatePricing);
+            });
 
-        function toggleDiscountInput() {
-            const mode = byId('discount_mode').value;
-            byId('discount_value').style.display = mode === 'manual' ? '' : 'none';
-            if (mode !== 'manual') byId('discount_value').value = '';
-        }
-        function toggleDurationInput() {
-            const mode = byId('duration_mode').value;
-            byId('speed-container').style.display = mode === 'manual' ? 'none' : '';
-            byId('manual_days').style.display = mode === 'manual' ? '' : 'none';
-            if (mode !== 'manual') byId('manual_days').value = '';
-        }
-        const discountModeEl = byId('discount_mode');
-        if (discountModeEl) discountModeEl.addEventListener('change', toggleDiscountInput);
-        const durationModeEl = byId('duration_mode');
-        if (durationModeEl) durationModeEl.addEventListener('change', toggleDurationInput);
-        toggleDiscountInput();
-        toggleDurationInput();
-        const siteIds = ['etage', 'ascenseur', 'portage', 'acces', 'stationnement', 'parking_fees', 'engins', 'dechets', 'complexite'];
-        siteIds.forEach(id => {
-            const el = byId(id);
-            if (el) {
-                el.addEventListener('change', updatePricing);
-                el.addEventListener('input', updatePricing);
+            function toggleDiscountInput() {
+                const mode = byId('discount_mode').value;
+                byId('discount_value').style.display = mode === 'manual' ? '' : 'none';
+                if (mode !== 'manual') byId('discount_value').value = '';
             }
-        });
-        const logement2ansEl = byId('logement_2ans');
-        if (logement2ansEl) logement2ansEl.addEventListener('change', updatePricing);
-        const villeEl = byId('ville');
-        if (villeEl) villeEl.addEventListener('input', updatePricing);
-        addTaskRow();
+            function toggleDurationInput() {
+                const mode = byId('duration_mode').value;
+                byId('speed-container').style.display = mode === 'manual' ? 'none' : '';
+                byId('manual_days').style.display = mode === 'manual' ? '' : 'none';
+                if (mode !== 'manual') byId('manual_days').value = '';
+            }
+            const discountModeEl = byId('discount_mode');
+            if (discountModeEl) discountModeEl.addEventListener('change', toggleDiscountInput);
+            const durationModeEl = byId('duration_mode');
+            if (durationModeEl) durationModeEl.addEventListener('change', toggleDurationInput);
+            toggleDiscountInput();
+            toggleDurationInput();
+            const siteIds = ['etage', 'ascenseur', 'portage', 'acces', 'stationnement', 'parking_fees', 'engins', 'dechets', 'complexite'];
+            siteIds.forEach(id => {
+                const el = byId(id);
+                if (el) {
+                    el.addEventListener('change', updatePricing);
+                    el.addEventListener('input', updatePricing);
+                }
+            });
+            const logement2ansEl = byId('logement_2ans');
+            if (logement2ansEl) logement2ansEl.addEventListener('change', updatePricing);
+            const villeEl = byId('ville');
+            if (villeEl) villeEl.addEventListener('input', updatePricing);
+            addTaskRow();
+
+        }
 
         // Génération du récapitulatif
         function buildRecap() {
@@ -1858,7 +1887,13 @@
         document.addEventListener('scroll', updateProgressBar);
         updateProgressBar();
 
-        renderCompany();
+        async function initApp() {
+            await hydrateCatalogWithSubtasks();
+            initializeInteractions();
+            renderCompany();
+        }
+
+        initApp();
         });
     </script>
 </body>
