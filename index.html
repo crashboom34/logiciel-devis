@@ -928,7 +928,6 @@
         };
 
         async function hydrateCatalogWithSubtasks() {
- codex/developper-un-site-web-pour-un-client-88l5s0
             const applySubtasks = (library, sourceLabel) => {
                 if (!library) return false;
                 const mapping = library.subtasks && typeof library.subtasks === 'object'
@@ -976,23 +975,6 @@
 
             if (!subtasksLoaded) {
                 console.warn("Aucune sous-tâche n'a pu être chargée. Vérifiez subtasks.json ou subtasks.js.");
-
-            try {
-                const response = await fetch('subtasks.json', { cache: 'no-store' });
-                if (!response.ok) return;
-                const data = await response.json();
-                if (data && data.subtasks) {
-                    Object.values(CATALOG).forEach(tasks => {
-                        tasks.forEach(task => {
-                            if (data.subtasks[task.id]) {
-                                task.subtasks = data.subtasks[task.id];
-                            }
-                        });
-                    });
-                }
-            } catch (error) {
-                console.warn('Impossible de charger les sous-tâches', error);
- main
             }
         }
 
