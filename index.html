@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Devis intelligent</title>
     <link rel="stylesheet" href="saas.css"/>
+    <script defer src="subtasks.js"></script>
     <script>
         let user = JSON.parse(localStorage.getItem('user') || 'null');
 
@@ -895,6 +896,55 @@
         };
 
         async function hydrateCatalogWithSubtasks() {
+ codex/developper-un-site-web-pour-un-client-88l5s0
+            const applySubtasks = (library, sourceLabel) => {
+                if (!library) return false;
+                const mapping = library.subtasks && typeof library.subtasks === 'object'
+                    ? library.subtasks
+                    : library;
+                if (!mapping || typeof mapping !== 'object') {
+                    return false;
+                }
+                let hydrated = false;
+                Object.values(CATALOG).forEach(tasks => {
+                    tasks.forEach(task => {
+                        const subtasks = mapping[task.id];
+                        if (Array.isArray(subtasks) && subtasks.length) {
+                            task.subtasks = [...subtasks];
+                            hydrated = true;
+                        }
+                    });
+                });
+                if (!hydrated && sourceLabel) {
+                    console.warn(`Aucune sous-tâche correspondante trouvée dans ${sourceLabel}.`);
+                }
+                return hydrated;
+            };
+
+            let subtasksLoaded = false;
+
+            try {
+                const response = await fetch('subtasks.json', { cache: 'no-store' });
+                if (response.ok) {
+                    const data = await response.json();
+                    subtasksLoaded = applySubtasks(data && (data.subtasks || data), 'subtasks.json');
+                } else {
+                    console.warn(`Impossible de charger les sous-tâches (statut HTTP ${response.status}).`);
+                }
+            } catch (error) {
+                console.warn('Impossible de charger les sous-tâches à partir du fichier JSON.', error);
+            }
+
+            if (!subtasksLoaded && window.SUBTASK_LIBRARY) {
+                subtasksLoaded = applySubtasks(
+                    window.SUBTASK_LIBRARY.subtasks || window.SUBTASK_LIBRARY,
+                    'la bibliothèque embarquée'
+                );
+            }
+
+            if (!subtasksLoaded) {
+                console.warn("Aucune sous-tâche n'a pu être chargée. Vérifiez subtasks.json ou subtasks.js.");
+
             try {
                 const response = await fetch('subtasks.json', { cache: 'no-store' });
                 if (!response.ok) return;
@@ -910,6 +960,7 @@
                 }
             } catch (error) {
                 console.warn('Impossible de charger les sous-tâches', error);
+ main
             }
         }
 
@@ -940,10 +991,12 @@
         const PORTAGE_COST_PER_M = 0.5;
         const WASTE_COST_PER_M3 = 50;
         async function getDistanceFromCity(city) {
-            const key = (city || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const normalizedCity = (city || '').trim();
+            if (!normalizedCity) return 0;
+            const key = normalizedCity.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             if (CITY_DISTANCES[key]) return CITY_DISTANCES[key];
             try {
-                const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(city)}&limit=1&autocomplete=0&lat=${BASE_COORDS.lat}&lon=${BASE_COORDS.lon}`);
+                const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(normalizedCity)}&limit=1&autocomplete=0&lat=${BASE_COORDS.lat}&lon=${BASE_COORDS.lon}`);
                 if (res.ok) {
                     const data = await res.json();
                     const feature = data.features && data.features[0];
