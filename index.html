@@ -898,10 +898,16 @@
         async function hydrateCatalogWithSubtasks() {
             const applySubtasks = (library, sourceLabel) => {
                 if (!library) return false;
+                const mapping = library.subtasks && typeof library.subtasks === 'object'
+                    ? library.subtasks
+                    : library;
+                if (!mapping || typeof mapping !== 'object') {
+                    return false;
+                }
                 let hydrated = false;
                 Object.values(CATALOG).forEach(tasks => {
                     tasks.forEach(task => {
-                        const subtasks = library[task.id];
+                        const subtasks = mapping[task.id];
                         if (Array.isArray(subtasks) && subtasks.length) {
                             task.subtasks = [...subtasks];
                             hydrated = true;
@@ -920,7 +926,7 @@
                 const response = await fetch('subtasks.json', { cache: 'no-store' });
                 if (response.ok) {
                     const data = await response.json();
-                    subtasksLoaded = applySubtasks(data && data.subtasks, 'subtasks.json');
+                    subtasksLoaded = applySubtasks(data && (data.subtasks || data), 'subtasks.json');
                 } else {
                     console.warn(`Impossible de charger les sous-tâches (statut HTTP ${response.status}).`);
                 }
@@ -929,7 +935,10 @@
             }
 
             if (!subtasksLoaded && window.SUBTASK_LIBRARY) {
-                subtasksLoaded = applySubtasks(window.SUBTASK_LIBRARY, 'la bibliothèque embarquée');
+                subtasksLoaded = applySubtasks(
+                    window.SUBTASK_LIBRARY.subtasks || window.SUBTASK_LIBRARY,
+                    'la bibliothèque embarquée'
+                );
             }
 
             if (!subtasksLoaded) {
