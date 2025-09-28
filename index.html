@@ -326,18 +326,50 @@
         }
 
         .subtasks {
-            margin-left: 40px;
+            margin: 12px 0 0;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: rgba(148, 163, 184, 0.12);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        html[data-theme='light'] .subtasks {
+            background: rgba(15, 23, 42, 0.05);
+        }
+
+        .subtasks:empty {
+            display: none;
+        }
+
+        .subtasks:not(:empty)::before {
+            content: 'Sous-tâches';
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
         }
 
         .subtask-row {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-top: 4px;
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: rgba(15, 23, 42, 0.35);
+        }
+
+        html[data-theme='light'] .subtask-row {
+            background: rgba(148, 163, 184, 0.12);
         }
 
         .subtask-row input {
             flex: 1;
+            padding: 10px;
         }
 
         @media (max-width: 600px) {
